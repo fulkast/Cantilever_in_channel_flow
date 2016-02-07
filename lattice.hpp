@@ -356,6 +356,8 @@ public: // walls
 
 	void print_out_going_velocities(lb::coordinate<int> position);
 
+	double get_shortest_distance_to_true_boundary(lb::coordinate<int> position);
+
 	/** @brief Delete all existing walls */
 	void delete_walls();
 	
@@ -631,6 +633,17 @@ void lattice::print_out_going_velocities(lb::coordinate<int> position)
 	{
 		(*i)->print_out_going_velocities(position);
 	}
+}
+
+double lattice::get_shortest_distance_to_true_boundary(lb::coordinate<int> position)
+{
+	double result = std::numeric_limits<double>::max();
+	for (std::vector<geometry_2D*>::iterator i = shapes.begin(); i != shapes.end(); i++)
+	{
+		result = std::min(result,
+						  (*i)->get_shortest_distance_to_true_boundary(position));
+	}
+	return result;
 }
 
 void lattice::write_fields(std::string file_name)

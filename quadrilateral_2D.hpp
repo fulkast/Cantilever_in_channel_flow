@@ -45,8 +45,8 @@ public:
         CGAL::Bbox_2 boundingBox = mPolygon->bbox();
 
         // iterate through bounding box nodes with 1 node lee way on all 4 sides
-        for (int i = std::floor(CGAL::to_double(boundingBox.xmin())) - 1; i <= std::ceil(CGAL::to_double(boundingBox.xmax())) + 1; i++) {
-            for (int j = std::floor(CGAL::to_double(boundingBox.ymin())) - 1; j <= std::ceil(CGAL::to_double(boundingBox.ymax())) + 1; j++) {
+        for (int i = std::floor(CGAL::to_double(boundingBox.xmin())) - 2; i <= std::ceil(CGAL::to_double(boundingBox.xmax())) + 2; i++) {
+            for (int j = std::floor(CGAL::to_double(boundingBox.ymin())) - 2; j <= std::ceil(CGAL::to_double(boundingBox.ymax())) + 2; j++) {
 
                 // current point being checked
                 Point query_point(i,j);
@@ -91,11 +91,15 @@ public:
 
     double get_shortest_distance_to_true_boundary(lb::coordinate<int> position)
     {
-       /* int i = position.i - mCenterOfMass.i;
-        int j = position.j - mCenterOfMass.j;
-
-        return sqrt(i*i + j*j) - mRadius;
-        */
+        double result = std::numeric_limits<double>::max();
+        Point currentPoint(position.i,position.j);
+        for (auto anEdge = mPolygon->edges_begin(); anEdge != mPolygon->edges_end(); anEdge++)
+        {
+            result = std::min(result,
+                              CGAL::to_double(CGAL::squared_distance(currentPoint,*anEdge))
+            );
+        }
+        return std::sqrt(result);
     }
 
     std::vector<int> get_out_going_velocity_indices(lb::coordinate<int> position)
@@ -111,5 +115,5 @@ private:
     Point mPoints[4];
 };
 
-// CGAL trial
+
 
