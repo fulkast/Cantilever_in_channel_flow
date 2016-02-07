@@ -60,7 +60,7 @@ public:
     {
         mBoundaryNodes.clear();
         mInternalNodes.clear();
-        mOutGoingVelocityIndexMap.clear();
+        mMissingPopulationIndexMap.clear();
 
         // get bounding box of current shape
         CGAL::Bbox_2 boundingBox = mPolygon->bbox();
@@ -93,7 +93,7 @@ public:
                     {
                         // reflect the velocity index to get the corresponding outgoing velocity at the node
                         // and add it to the outgoing velocity indices of the current (boundary) node
-                        outGoingVelocityIndices.push_back(lb::velocity_set().incoming_velocity_to_outgoing_velocity(velocity_index));
+                        mMissingPopulationIndexMap.push_back(lb::velocity_set().incoming_velocity_to_outgoing_velocity(velocity_index));
                         is_boundary = true;
                     }
 
@@ -103,7 +103,7 @@ public:
                 if (is_boundary)
                 {
                     mBoundaryNodes.push_back(lb::coordinate<int>(i,j));
-                    mOutGoingVelocityIndexMap.insert(make_pair(make_pair(i,j),outGoingVelocityIndices));
+                    mMissingPopulationIndexMap.insert(make_pair(make_pair(i,j),outGoingVelocityIndices));
                 }
 
             }
