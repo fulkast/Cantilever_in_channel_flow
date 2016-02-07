@@ -6,7 +6,6 @@
 #include <omp.h>
 #include "global.hpp"
 
-
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Polygon_2.h>
 #include <iostream>
@@ -15,17 +14,27 @@ typedef K::Point_2 Point;
 typedef CGAL::Polygon_2<K> Polygon_2;
 using std::cout; using std::endl;
 
+#include <iostream>
+#include "quadrilateral_2D.hpp"
+
+
+
 int main(int argc, char *argv[])
 {
 	omp_set_num_threads(std::max(omp_get_max_threads(),omp_get_num_procs()));
 	
 	lb::simulation* sim = new lb::simulation(400,200,500,0.05);
 	sim->initialize();
+
 	sim->l.add_to_shapes(new cylinder_2D(lb::coordinate<int>(100,100), 5, 5));
+
+	sim->l.add_to_shapes(new quadrilateral_2D(lb::coordinate<int>(100,100), 5, 20, 20));
+
 	sim->l.print_shapes();
 	std::cout << "Initialized lattice..." << std::endl;
 	std::cout << *sim << std::endl;
 	sim->l.print_bounding_nodes();
+
 
 // CGAL trial
   /*Point points[] = { Point(0,0), Point(5.1,0), Point(1,1), Point(0.5,6)};
@@ -37,6 +46,11 @@ int main(int argc, char *argv[])
   cout << "The polygon is " <<
     (pgn.is_convex() ? "" : "not ") << "convex." << endl;
 */
+
+	sim->l.print_out_going_velocities(lb::coordinate<int>(90,89));
+
+
+
 	#ifdef USE_OPENGL_VISUALIZATION
 	
 		lb::visualization::initialize(sim,argc,argv);

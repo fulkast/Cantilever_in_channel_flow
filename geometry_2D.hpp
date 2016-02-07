@@ -1,6 +1,7 @@
 #include "global.hpp"
 #include <vector>
 #include "velocity_set.hpp"
+#include <map>
 #pragma once
 
 class geometry_2D {
@@ -35,6 +36,9 @@ public:
     // print position of current boundary nodes
     void print_boundary_nodes();
 
+    // print out going velocity indices at position
+    void print_out_going_velocities(lb::coordinate<int> position);
+
     // calculate proximity of boundary node to the shape's true boundary
     virtual double get_shortest_distance_to_true_boundary(lb::coordinate<int> position) = 0;
 
@@ -47,6 +51,9 @@ protected:
     double mOrientation;                                           // current object's orientation
     std::vector<lb::coordinate<int>> mBoundaryNodes;               // current object's boundaries
     std::vector<lb::coordinate<int>> mInternalNodes;               // current object's wall internal nodes
+    std::map<std::pair<int,int>,std::vector<int>>
+            mOutGoingVelocityIndexMap;                             // curre boundary's out going velocity
+                                                                    // indices
 
 };
 

@@ -2,8 +2,6 @@
  *  @file
  *  @author Fabian Bösch
  *  @brief simulation
- *
- *  Last edit: Feb 2. 2016. ful. Working
  */
 
 #ifndef LB_SIMULATION_HPP_INCLUDED
@@ -96,7 +94,7 @@ public: // ctor
 			{		
 				l.get_node(i,j).u()   =  -((Vmax*Ky/std::sqrt(Kx*Kx+Ky*Ky))*std::sin(Ky*j)*std::cos(Kx*i));
 				l.get_node(i,j).v()   = ((Vmax*Ky/std::sqrt(Kx*Kx+Ky*Ky))*std::sin(Kx*i)*std::cos(Ky*j));
-				l.get_node(i,j).rho() = 2;//1 - (Vmax/velocity_set().cs)*(Vmax/velocity_set().cs)/(2*K*K)*(Ky*Ky*std::cos(2*Kx*i)+Kx*Kx*std::cos(2*Ky*j));
+				l.get_node(i,j).rho() = 1 - (Vmax/velocity_set().cs)*(Vmax/velocity_set().cs)/(2*K*K)*(Ky*Ky*std::cos(2*Kx*i)+Kx*Kx*std::cos(2*Ky*j));
 				lb::velocity_set().equilibrate(l.get_node(i,j));
 								
 			}
@@ -181,24 +179,11 @@ public: // ctor
 	/**  @brief apply wall boundary conditions */
 	void wall_bc()
 	{
-		for (auto i = l.shapes.begin(); i != l.shapes.end(); i++)
-		{
-
-			std::vector<lb::coordinate<int>> currentNodes = (*i)->get_boundary_nodes();
-
-			for(auto j = currentNodes.begin(); j != currentNodes.end(); j++)
-			{
-				//
-				l.get_node(j->i,j->j).rho() = 100;
-			}
-
-		}
-
 		#pragma omp parallel for
 		for (unsigned int i=0; i<l.wall_nodes.size(); ++i)
 		{
 			// **************************
-
+			
 			// **************************
 		}
 	}
@@ -251,9 +236,9 @@ public: // ctor
 	/** @brief LB step */
 	void step()
 	{
-		//advect();
+		advect();
 		wall_bc();
-		//collide();
+		collide();
 		
 		// file io
 		if ( file_output && ( ((time+1) % output_freq) == 0 || time == 0 ) )

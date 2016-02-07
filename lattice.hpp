@@ -354,6 +354,8 @@ public: // walls
 
 	void print_bounding_nodes();
 
+	void print_out_going_velocities(lb::coordinate<int> position);
+
 	/** @brief Delete all existing walls */
 	void delete_walls();
 	
@@ -620,6 +622,14 @@ void lattice::print_bounding_nodes()
 	for (std::vector<geometry_2D*>::iterator i = shapes.begin(); i != shapes.end(); i++)
 	{
 		(*i)->print_boundary_nodes();
+	}
+}
+
+void lattice::print_out_going_velocities(lb::coordinate<int> position)
+{
+	for (std::vector<geometry_2D*>::iterator i = shapes.begin(); i != shapes.end(); i++)
+	{
+		(*i)->print_out_going_velocities(position);
 	}
 }
 
