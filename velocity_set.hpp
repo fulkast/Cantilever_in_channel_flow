@@ -49,6 +49,7 @@ public:
 	const std::array<std::array<int, 9>, 2> c = {{{{       0,       1,       0,      -1,       0,       1,      -1,      -1,       1}}, 
 	                                              {{       0,       0,       1,       0,      -1,       1,       1,      -1,      -1}}}}; ///< Molecular velocities
 
+
 	// returns the reflected index of a given velocity index. Used for bounce back calculation against walls
 	int incoming_velocity_to_outgoing_velocity(int incoming_velocity_index) const
 	{
@@ -74,7 +75,6 @@ public:
 				std::cerr << "Invalid velocity switching index called... " << std::endl;
 			}
 	}
-
 	const float_type cs = 1.0/std::sqrt(3.0);   ///< Speed of sound
 	
 	const unsigned int size = 9;                ///< Number of velocities
