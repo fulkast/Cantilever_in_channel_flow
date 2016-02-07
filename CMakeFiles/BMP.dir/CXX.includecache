@@ -1,0 +1,38 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/frank/Desktop/MyStudies/Lattice_Boltzmann/LB2D_Framework/third_party/EasyBMP/EasyBMP.cpp
+EasyBMP.h
+/home/frank/Desktop/MyStudies/Lattice_Boltzmann/LB2D_Framework/third_party/EasyBMP/EasyBMP.h
+
+/home/frank/Desktop/MyStudies/Lattice_Boltzmann/LB2D_Framework/third_party/EasyBMP/EasyBMP.h
+iostream
+-
+cmath
+-
+cctype
+-
+cstring
+-
+stdio.h
+-
+cstdio
+-
+EasyBMP_DataStructures.h
+/home/frank/Desktop/MyStudies/Lattice_Boltzmann/LB2D_Framework/third_party/EasyBMP/EasyBMP_DataStructures.h
+EasyBMP_BMP.h
+/home/frank/Desktop/MyStudies/Lattice_Boltzmann/LB2D_Framework/third_party/EasyBMP/EasyBMP_BMP.h
+EasyBMP_VariousBMPutilities.h
+/home/frank/Desktop/MyStudies/Lattice_Boltzmann/LB2D_Framework/third_party/EasyBMP/EasyBMP_VariousBMPutilities.h
+
+/home/frank/Desktop/MyStudies/Lattice_Boltzmann/LB2D_Framework/third_party/EasyBMP/EasyBMP_BMP.h
+
+/home/frank/Desktop/MyStudies/Lattice_Boltzmann/LB2D_Framework/third_party/EasyBMP/EasyBMP_DataStructures.h
+
+/home/frank/Desktop/MyStudies/Lattice_Boltzmann/LB2D_Framework/third_party/EasyBMP/EasyBMP_VariousBMPutilities.h
+

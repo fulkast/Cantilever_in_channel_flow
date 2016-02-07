@@ -1,0 +1,2 @@
+/usr/bin/ar cr libBMP.a  CMakeFiles/BMP.dir/third_party/EasyBMP/EasyBMP.cpp.o
+/usr/bin/ranlib libBMP.a
