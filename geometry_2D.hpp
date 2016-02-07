@@ -1,0 +1,53 @@
+#include "global.hpp"
+#include <vector>
+#include "velocity_set.hpp"
+#pragma once
+
+class geometry_2D {
+                    // Define a 2D geometry by its center of mass and counter clock wise orientation relative to the
+                    // x-axis
+public:
+    // constructors
+    geometry_2D();
+    geometry_2D(lb::coordinate<int> position, double orientation);
+
+    // setters for the geometry's position and orientation
+    void set_center_of_mass(lb::coordinate<int> position);
+    void set_orientation(int orientation);
+
+    // getters for the position and orientation of the shape
+    lb::coordinate<int> get_center_of_mass();
+    double get_orientation();
+
+    // print position orientation and if available, dimensions of the shape
+    virtual void print();
+
+    // clears current vector of boundary nodes and refills their entities
+    // given the current state of the shape. Also refreshes the internal nodes!
+    virtual void update_boundary_and_internal_nodes() = 0;
+
+    // getter for the boundary nodes
+    std::vector<lb::coordinate<int>> get_boundary_nodes();
+
+    // getter for the internal nodes
+    std::vector<lb::coordinate<int>> get_internal_nodes();
+
+    // print position of current boundary nodes
+    void print_boundary_nodes();
+
+    // calculate proximity of boundary node to the shape's true boundary
+    virtual double get_shortest_distance_to_true_boundary(lb::coordinate<int> position) = 0;
+
+    // get out-going velocity set indices
+    virtual std::vector<int> get_out_going_velocity_indices(lb::coordinate<int> position) = 0;
+
+
+protected:
+    lb::coordinate<int> mCenterOfMass;                             // current object's center of mass
+    double mOrientation;                                           // current object's orientation
+    std::vector<lb::coordinate<int>> mBoundaryNodes;               // current object's boundaries
+    std::vector<lb::coordinate<int>> mInternalNodes;               // current object's wall internal nodes
+
+};
+
+
