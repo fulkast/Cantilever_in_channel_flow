@@ -1,2 +1,0 @@
-/home/frank/Desktop/MyStudies/Lattice_Boltzmann/LB2D_Framework/CMakeFiles/BMP.dir
-/home/frank/Desktop/MyStudies/Lattice_Boltzmann/LB2D_Framework/CMakeFiles/LB2D.dir
