@@ -93,7 +93,7 @@ public:
                     {
                         // reflect the velocity index to get the corresponding outgoing velocity at the node
                         // and add it to the outgoing velocity indices of the current (boundary) node
-                        mMissingPopulationIndexMap.push_back(lb::velocity_set().incoming_velocity_to_outgoing_velocity(velocity_index));
+                        outGoingVelocityIndices.push_back(lb::velocity_set().incoming_velocity_to_outgoing_velocity(velocity_index));
                         is_boundary = true;
                     }
 

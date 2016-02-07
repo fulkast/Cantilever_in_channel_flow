@@ -1,5 +1,5 @@
 #include "geometry_2D.hpp"
-#include <vector>
+
 
     geometry_2D::geometry_2D(){}
 
@@ -48,14 +48,14 @@
 
     void geometry_2D::print_out_going_velocities(lb::coordinate<int> position)
     {
-        if (mOutGoingVelocityIndexMap.count(std::make_pair(position.i,position.j)) == 0)
+        if (mMissingPopulationIndexMap.count(std::make_pair(position.i,position.j)) == 0)
         {
             std::cerr << "Wrong boundary situation: No outgoing velocities at queried boundary point." << std::endl;
             return;
         }
         std::cout << "Boundary node at " << position << " has velocities: " << std::endl;
-        for (auto i = mOutGoingVelocityIndexMap[std::make_pair(position.i,position.j)].begin();
-             i != mOutGoingVelocityIndexMap[std::make_pair(position.i,position.j)].end(); i++)
+        for (auto i = mMissingPopulationIndexMap[std::make_pair(position.i,position.j)].begin();
+             i != mMissingPopulationIndexMap[std::make_pair(position.i,position.j)].end(); i++)
         {
             std::cout << lb::velocity_set().c[0][*i] << " " << lb::velocity_set().c[1][*i] << std::endl;
         }
