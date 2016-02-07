@@ -57,7 +57,7 @@ public:
         return sqrt(i*i + j*j) - mRadius;
     }
 
-    std::vector<int> get_out_going_velocity_indices(lb::coordinate<int> position)
+    std::vector<int> find_missing_populations(lb::coordinate<int> position)
     {
         int i = position.i - mCenterOfMass.i;
         int j = position.j - mCenterOfMass.j;
