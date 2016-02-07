@@ -1,5 +1,8 @@
 #include "geometry_2D.hpp"
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Aff_transformation_2.h>
+#include <CGAL/Cartesian.h>
+#include <CGAL/Vector_2.h>
 #include <CGAL/Polygon_2.h>
 #include <CGAL/Bbox_2.h>
 
@@ -7,6 +10,8 @@
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 typedef K::Point_2 Point;
 typedef CGAL::Polygon_2<K> Polygon_2;
+typedef CGAL::Aff_transformation_2<K> Transformation;
+typedef CGAL::Vector_2<K> Vector;
 
 using namespace std;
 
@@ -15,14 +20,30 @@ class quadrilateral_2D : public geometry_2D {
 
 public:
 
-    quadrilateral_2D(lb::coordinate<int> centerOfMass, double orientation, double width, double height) :
+    quadrilateral_2D(lb::coordinate<double> centerOfMass, double orientation, double width, double height) :
             geometry_2D(centerOfMass,orientation), mWidth(width), mHeight(height)
     {
-        mPoints[0] = Point(centerOfMass.i-width/2,centerOfMass.j+height/2);
-        mPoints[1] = Point(centerOfMass.i+width/2,centerOfMass.j+height/2);
-        mPoints[2] = Point(centerOfMass.i+width/2,centerOfMass.j-height/2);
-        mPoints[3] = Point(centerOfMass.i-width/2,centerOfMass.j-height/2);
         mPolygon =  new Polygon_2(mPoints, mPoints+4);
+
+        update_shape();
+    }
+
+    void update_shape()
+    {
+        mPoints[0] = Point(-mWidth/2,+mHeight/2);
+        mPoints[1] = Point(+mWidth/2,+mHeight/2);
+        mPoints[2] = Point(+mWidth/2,-mHeight/2);
+        mPoints[3] = Point(-mWidth/2,-mHeight/2);
+
+        mRotate = Transformation(CGAL::ROTATION, sin(mOrientation), cos(mOrientation));
+        Transformation translate(CGAL::TRANSLATION, Vector(mCenterOfMass.i, mCenterOfMass.j));
+        for (int i = 0; i < 4; i++)
+        {
+            mPoints[i] = mRotate(mPoints[i]);
+            mPoints[i] = translate(mPoints[i]);
+        }
+
+        *mPolygon = Polygon_2(mPoints, mPoints+4);
         update_boundary_and_internal_nodes();
 
     }
@@ -67,7 +88,8 @@ public:
                 {
                     query_point = Point(i+lb::velocity_set().c[0][velocity_index],j+lb::velocity_set().c[1][velocity_index]);
 
-                    if (CGAL::bounded_side_2(mPoints,mPoints+4,query_point, K()) == CGAL::ON_BOUNDARY)
+                    if (CGAL::bounded_side_2(mPoints,mPoints+4,query_point, K()) == CGAL::ON_BOUNDED_SIDE ||
+                            CGAL::bounded_side_2(mPoints,mPoints+4,query_point, K()) == CGAL::ON_BOUNDARY)
                     {
                         // reflect the velocity index to get the corresponding outgoing velocity at the node
                         // and add it to the outgoing velocity indices of the current (boundary) node
@@ -113,6 +135,7 @@ private:
     double mHeight = 0;
     Polygon_2* mPolygon;
     Point mPoints[4];
+    Transformation mRotate;
 };
 
 

@@ -235,7 +235,8 @@ private: // ctors
 			wall[k] = (sim->l.properties.has_flag_property("wall",k) ? 1 : 0);
 		}
 		// make v buffer, bind it and fill with values
-		wall_vbo = make_buffer(GL_ARRAY_BUFFER, wall_data, field_vbo_size*sizeof(float), GL_STATIC_DRAW);
+		//wall_vbo = make_buffer(GL_ARRAY_BUFFER, wall_data, field_vbo_size*sizeof(float), GL_STATIC_DRAW);
+		wall_vbo = make_buffer(GL_ARRAY_BUFFER, wall_data, field_vbo_size*sizeof(float), GL_DYNAMIC_DRAW);
 		// make shader attribute
 		location = wall_shader_ptr->get_attribute_location("wall");
 		glVertexAttribPointer(location, 1, GL_FLOAT, GL_FALSE, 0, (GLvoid *) 0);

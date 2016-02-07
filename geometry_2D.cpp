@@ -3,20 +3,20 @@
 
     geometry_2D::geometry_2D(){}
 
-    geometry_2D::geometry_2D(lb::coordinate<int> centerOfMass, double orientation) : mCenterOfMass(centerOfMass.i,centerOfMass.j)
+    geometry_2D::geometry_2D(lb::coordinate<double> centerOfMass, double orientation) : mCenterOfMass(centerOfMass.i,centerOfMass.j)
                                 , mOrientation(orientation)  {}
 
-    void geometry_2D::set_center_of_mass(lb::coordinate<int> position)
+    void geometry_2D::set_center_of_mass(lb::coordinate<double> position)
     {
         mCenterOfMass = position;
     }
 
-    void geometry_2D::set_orientation(int orientation)
+    void geometry_2D::set_orientation(double orientation)
     {
         mOrientation = orientation;
     }
 
-    lb::coordinate<int> geometry_2D::get_center_of_mass(){return mCenterOfMass;}
+    lb::coordinate<double> geometry_2D::get_center_of_mass(){return mCenterOfMass;}
 
     double geometry_2D::get_orientation(){return mOrientation;}
 
@@ -59,4 +59,9 @@
         {
             std::cout << lb::velocity_set().c[0][*i] << " " << lb::velocity_set().c[1][*i] << std::endl;
         }
+    }
+
+    void geometry_2D::update_shape()
+    {
+
     }
