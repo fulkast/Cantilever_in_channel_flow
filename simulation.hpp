@@ -293,9 +293,9 @@ public: // write to file
 	/** write macroscopic variables to ascii file */
 	void write_fields()
 	{
- std::stringstream fns;
+ /*std::stringstream fns;
 		fns << "output/data_" << std::setfill('0') << std::setw(4) << output_index << ".txt";
-		l.write_fields(fns.str());
+		l.write_fields(fns.str());*/
 	}
 
 public: // print
