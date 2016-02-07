@@ -6,7 +6,7 @@ class cylinder_2D : public geometry_2D {
 
 public:
 
-    cylinder_2D(lb::coordinate<double> centerOfMass, double orientation, int radius) :
+    cylinder_2D(lb::coordinate<double> centerOfMass, double orientation, double radius) :
             geometry_2D(centerOfMass,orientation), mRadius(radius) {
         update_boundary_and_internal_nodes();
     }
@@ -79,5 +79,5 @@ public:
 
 
 private:
-    int mRadius = 0;
+    double mRadius = 0;
 };
