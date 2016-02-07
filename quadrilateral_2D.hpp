@@ -124,9 +124,9 @@ public:
         return std::sqrt(result);
     }
 
-    std::vector<int> get_out_going_velocity_indices(lb::coordinate<int> position)
+    std::vector<int> find_missing_populations(lb::coordinate<int> position)
     {
-         return mOutGoingVelocityIndexMap[make_pair(position.i,position.j)];
+         return mMissingPopulationIndexMap[make_pair(position.i,position.j)];
     }
 
 
