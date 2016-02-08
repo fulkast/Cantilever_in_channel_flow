@@ -44,12 +44,12 @@ public:
 
 	
 	//                                                     0,       1,       2,       3,       4,       5,       6,       7,       8
-	const std::array<float_type, 9>         W =   {{ 16.0/36,  4.0/36,  4.0/36,  4.0/36,  4.0/36,  1.0/36,  1.0/36,  1.0/36,  1.0/36}};   ///< Lattice weights
+	const std::array<float_type, 9>         W =   {{ 16.0f/36.0f,  4.0f/36.0f,  4.0f/36.0f,  4.0f/36.0f,  4.0f/36.0f,  1.0f/36.0f,  1.0f/36.0f,  1.0f/36.0f,  1.0f/36.0f}};   ///< Lattice weights
 	
 	const std::array<std::array<int, 9>, 2> c = {{{{       0,       1,       0,      -1,       0,       1,      -1,      -1,       1}}, 
 	                                              {{       0,       0,       1,       0,      -1,       1,       1,      -1,      -1}}}}; ///< Molecular velocities
 
-
+	const std::array<float_type, 9> magnitude_c = {{0, 1, 1, 1, 1,std::sqrt(2.0f), std::sqrt(2.0f), std::sqrt(2.0f), std::sqrt(2.0f)}};	                                              
 	// returns the reflected index of a given velocity index. Used for bounce back calculation against walls
 	int incoming_velocity_to_outgoing_velocity(int incoming_velocity_index) const
 	{
