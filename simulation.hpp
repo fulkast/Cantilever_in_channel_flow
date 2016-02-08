@@ -184,13 +184,14 @@ public: // ctor
 			//  l.f[8][l.index(0,j)-shift[8]] = l.f[8][l.index(l.nx,j)];	// moving SE
 			// }
 			
-			// EAST WALL --> (outgoing)
-			// for (int j = 0; j <= l.ny-1; j++)
-			// {
-			//  l.f[3][l.index(l.nx-1,j)-shift[3]] = l.f[3][l.index(l.nx-1,j)];	//moving West
-			//  l.f[6][l.index(l.nx-1,j)-shift[6]] = l.f[6][l.index(l.nx-1,j)];	// moving NW
-			//  l.f[7][l.index(l.nx-1,j)-shift[7]] = l.f[7][l.index(l.nx-1,j)];	// moving SW
-			// }
+			// EAST WALL --> (outgoing) 
+			// 'quench' populations --> equilibrate?
+			for (int j = 0; j <= l.ny-1; j++)
+			{
+			 l.f[3][l.index(l.nx,j)] = l.f[3][l.index(l.nx-1,j)];	//moving West
+			 l.f[6][l.index(l.nx,j)] = l.f[6][l.index(l.nx-1,j)];	// moving NW
+			 l.f[7][l.index(l.nx,j)] = l.f[7][l.index(l.nx-1,j)];	// moving SW
+			}
 			
 			// // no slip top and bottom
 			// North moving particles
