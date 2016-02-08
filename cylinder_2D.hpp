@@ -6,7 +6,7 @@ class cylinder_2D : public geometry_2D {
 
 public:
 
-    cylinder_2D(lb::coordinate<double> centerOfMass, double orientation, int radius) :
+    cylinder_2D(lb::coordinate<double> centerOfMass, double orientation, double radius) :
             geometry_2D(centerOfMass,orientation), mRadius(radius) {
         update_boundary_and_internal_nodes();
     }
@@ -32,8 +32,8 @@ public:
         // push in points that are between the current radius and 1 integer radial distance further away exclusive of the boundaries
         // we already entered the 4 cardinal points earlier so every other boundary node should be strictly between
         // the current radius and current radius plus one ## note the integer nature of the radius
-        for (int i = -mRadius-1; i < mRadius+1; i++) {
-            for (int j = -mRadius - 1; j < mRadius + 1; j++) {
+        for (int i = std::floor(-mRadius-1); i < std::ceil(mRadius+1); i++) {
+            for (int j = std::floor(-mRadius - 1); j < std::ceil(mRadius + 1); j++) {
                 if (i*i + j*j <= mRadius*mRadius)
                 {
                     // set as wall internal node
@@ -79,5 +79,5 @@ public:
 
 
 private:
-    int mRadius = 0;
+    double mRadius = 0;
 };
