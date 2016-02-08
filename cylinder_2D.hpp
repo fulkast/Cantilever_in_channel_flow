@@ -23,11 +23,6 @@ public:
     {
         mBoundaryNodes.clear();
         mInternalNodes.clear();
-        // push in corner points
-        mBoundaryNodes.push_back(lb::coordinate<int>(mCenterOfMass.i,mCenterOfMass.j+mRadius+1));
-        mBoundaryNodes.push_back(lb::coordinate<int>(mCenterOfMass.i,mCenterOfMass.j+mRadius-1));
-        mBoundaryNodes.push_back(lb::coordinate<int>(mCenterOfMass.i+1,mCenterOfMass.j+mRadius));
-        mBoundaryNodes.push_back(lb::coordinate<int>(mCenterOfMass.i-1,mCenterOfMass.j+mRadius));
 
         // push in points that are between the current radius and 1 integer radial distance further away exclusive of the boundaries
         // we already entered the 4 cardinal points earlier so every other boundary node should be strictly between
@@ -40,7 +35,7 @@ public:
                     mInternalNodes.push_back(lb::coordinate<int>(mCenterOfMass.i+i,mCenterOfMass.j+j));
                     continue;
                 }
-                if (i*i + j*j >= (mRadius+1)*(mRadius+1)) continue;
+                if (i*i + j*j > (mRadius+1)*(mRadius+1)) continue;
 
                 // set as boundary node
                 mBoundaryNodes.push_back(lb::coordinate<int>(mCenterOfMass.i+i,mCenterOfMass.j+j));
