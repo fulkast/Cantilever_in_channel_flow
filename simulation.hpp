@@ -35,12 +35,14 @@ public: // ctor
 	 *  @param[in] _Re   Reynolds number
 	 *  @param[in] _Vmax mean flow velocity
 	 */
-	simulation(unsigned int nx, unsigned int ny, float_type _Re, float_type _Vmax)
+	simulation(unsigned int nx, unsigned int ny, float_type _Re, float_type _Vmax, const double _D)
 	: l(nx, ny), 
 	  shift(velocity_set().size),
 	  Re(_Re), 
 	  Vmax(_Vmax),
-	  visc(_Vmax*nx/_Re ), // 
+	  D(_D),
+	  // visc(_Vmax*nx/_Re ), // visc = Vmax*D/Re
+	  visc(_Vmax*D/_Re),
 	  beta( 1/(2*visc/(velocity_set().cs*velocity_set().cs) + 1) ), 
 	  time(0),
 	  file_output(true), // set to true if you want to write files
@@ -82,12 +84,22 @@ public: // ctor
 		{
 			for (int i=-1; i<=static_cast<int>(l.nx); ++i)
 			{		
-				l.get_node(i,j).u()   =  -((Vmax*Ky/std::sqrt(Kx*Kx+Ky*Ky))*std::sin(Ky*j)*std::cos(Kx*i));
-				l.get_node(i,j).v()   = ((Vmax*Ky/std::sqrt(Kx*Kx+Ky*Ky))*std::sin(Kx*i)*std::cos(Ky*j));
-				l.get_node(i,j).rho() = 2; //1 - (Vmax/velocity_set().cs)*(Vmax/velocity_set().cs)/(2*K*K)*(Ky*Ky*std::cos(2*Kx*i)+Kx*Kx*std::cos(2*Ky*j));
+				if (i<100)
+				{
+					l.get_node(i,j).u()   = 5; 
+				}
+				else
+				{
+					l.get_node(i,j).u()   = 0; 
+				}
+
+				l.get_node(i,j).v()   = 0;
+				l.get_node(i,j).rho() = 1; 
 				lb::velocity_set().equilibrate(l.get_node(i,j));
 								
 			}
+
+			
 		}
 		
 	
@@ -121,6 +133,7 @@ public: // ctor
 				}
 			}
 		// Periodic boundaries 
+		/*
 			// East moving particles 
 			for (int j = 0; j <= l.ny-1; j++)
 			{
@@ -158,9 +171,45 @@ public: // ctor
 			l.f[6][l.index(l.nx-1,0)-shift[6]] = l.f[6][l.index(-1,l.ny)] ; // se corner
 			l.f[7][l.index(l.nx-1,l.ny-1)-shift[7]] = l.f[7][l.index(-1,-1)] ; // ne corner
 			l.f[8][l.index(0,l.ny-1)-shift[8]] = l.f[8][l.index(l.nx,-1)] ; // NW corner
-			
+		
 
 		
+			*/
+		//Flow boundary conditions
+			// East moving particles (incoming) 
+			// for (int j = 0; j <= l.ny-1; j++)
+			// {
+			//  l.f[1][l.index(0,j)-shift[1]] = l.f[1][l.index(l.nx,j)];	//moving east
+			//  l.f[5][l.index(0,j)-shift[5]] = l.f[5][l.index(l.nx,j)];	// moving NE
+			//  l.f[8][l.index(0,j)-shift[8]] = l.f[8][l.index(l.nx,j)];	// moving SE
+			// }
+			
+			// EAST WALL --> (outgoing)
+			// for (int j = 0; j <= l.ny-1; j++)
+			// {
+			//  l.f[3][l.index(l.nx-1,j)-shift[3]] = l.f[3][l.index(l.nx-1,j)];	//moving West
+			//  l.f[6][l.index(l.nx-1,j)-shift[6]] = l.f[6][l.index(l.nx-1,j)];	// moving NW
+			//  l.f[7][l.index(l.nx-1,j)-shift[7]] = l.f[7][l.index(l.nx-1,j)];	// moving SW
+			// }
+			
+			// // no slip top and bottom
+			// North moving particles
+			for (int i = 0; i <= l.nx-1; ++i)
+			{
+			 l.f[2][l.index(i,0)-shift[2]] = l.f[4][l.index(i,0)]; // moving north
+			 l.f[5][l.index(i,0)-shift[5]] = l.f[8][l.index(i,0)]; // moving NE
+			 l.f[6][l.index(i,0)-shift[6]] = l.f[7][l.index(i,0)]; // moving NW
+			}
+			
+			// South moving particles
+			for (int i = 0; i <= l.nx-1; ++i)
+			{
+			 l.f[4][l.index(i,l.ny-1)-shift[4]] = l.f[2][l.index(i,l.ny-1)]; // moving south
+			 l.f[7][l.index(i,l.ny-1)-shift[7]] = l.f[5][l.index(i,l.ny-1)]; // moving SW
+			 l.f[8][l.index(i,l.ny-1)-shift[8]] = l.f[6][l.index(i,l.ny-1)]; // moving SE
+			}
+		
+
 	
 		// **************************
 		
@@ -262,7 +311,7 @@ public: // ctor
 
 		std::cout << l.wall_nodes.size() << " is the number of wall nodes " << std::endl;
 		
-		//advect();
+		advect();
 		//Reset walls.
 		l.delete_walls();
 		wall_bc();
@@ -311,6 +360,7 @@ public: // members
 	const float_type Vmax;     ///< mean flow velocity
 	const float_type visc;     ///< viscosity
 	const float_type beta;     ///< LB parameter beta
+	const double D;
 	unsigned int time;         ///< simulation time
 	bool file_output;          ///< flag whether to write files
 	unsigned int output_freq;  ///< file output frequency

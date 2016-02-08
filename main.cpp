@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 	omp_set_num_threads(std::max(omp_get_max_threads(),omp_get_num_procs()));
 	const double D = 10; //Diameter of cylinder in cross flow
 
-	lb::simulation* sim = new lb::simulation(40*D,20*D,20,0.05); // nx, ny, Re, v_max
+	lb::simulation* sim = new lb::simulation(40*D,20*D,20,0.05,D); // nx, ny, Re, v_max, D
 	sim->initialize();
 	// sim->l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(100.5,100.5), 0, 20, 20));
 	// sim->l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(150.5, 150.5),0,15,15));
