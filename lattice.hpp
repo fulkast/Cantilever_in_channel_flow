@@ -337,27 +337,6 @@ public: // walls
 	 */
 	void unset_is_wall_node(coordinate<int> a_node);
 
-	/**
-	 * Adds a pointer to a 2d geometrical shape to the current frame
-	 */
-	void add_to_shapes(geometry_2D* a_shape);
-
-	/*
-	 * Deletes all current pointers to shapes
-	 */
-	void delete_shapes();
-
-	/*
-	 * Print all shapes info
-	 */
-	void print_shapes();
-
-	void print_bounding_nodes();
-
-	void print_out_going_velocities(lb::coordinate<int> position);
-
-	double get_shortest_distance_to_true_boundary(lb::coordinate<int> position);
-
 	/** @brief Delete all existing walls */
 	void delete_walls();
 	
@@ -396,7 +375,7 @@ public: // members
 	property_array properties;                ///< properties datastructure (can hold many different properties per node)
 	const bool periodic_x;                    ///< flag whether to use periodicity in x direction
 	const bool periodic_y;                    ///< flag whether to use periodicity in y direction
-	std::vector<geometry_2D*> shapes;		  ///< obstacle shapes in the current frame
+
 };
 
 
@@ -448,7 +427,7 @@ lattice::lattice(unsigned int _nx, unsigned int _ny)
   real_size(real_nx*real_ny), n_populations(velocity_set().size), 
   f( n_populations, std::vector<float_type>(real_size, 0) ),
   rho(real_size, 0), u(real_size, 0), v(real_size, 0), nodes(real_size),
-  properties(real_size), periodic_x(true), periodic_y(true), shapes()
+  properties(real_size), periodic_x(true), periodic_y(true)
 {
 	// register some properties
 	properties.register_flag_property("fluid");
@@ -556,27 +535,6 @@ void lattice::unset_is_wall_node(coordinate<int> a_node)
 	}
 }
 
-
-
-void lattice::add_spherical_wall(coordinate<int> o, int r)
-{
-	for (int j=-r; j <= r; ++j)
-	{
-		for (int i=-r; i<=r; ++i)
-		{
-			// check if is within bounding sphere
-			if ((i*i) + (j*j) <= r*r)
-				// check if node not yet labelled as wall
-				if (!get_node(i+o.i,j+o.j).has_flag_property("wall"))
-				{
-					// set wall property
-					get_node(i+o.i,j+o.j).set_flag_property("wall");
-					wall_nodes.push_back( get_node(i+o.i,j+o.j) );
-				}
-		}
-	}
-}
-
 void lattice::delete_walls()
 {
 	for (node n : wall_nodes)
@@ -584,66 +542,6 @@ void lattice::delete_walls()
 		n.unset_flag_property("wall");
 	}
 	wall_nodes.clear();
-}
-
-void lattice::add_to_shapes(geometry_2D* a_shape)
-{
-	shapes.push_back(a_shape);
-	std::vector<coordinate<int>> new_wall = a_shape->get_internal_nodes();
-	for (auto i = new_wall.begin(); i != new_wall.end(); i++ )
-	{
-		lattice::set_is_wall_node(*i);
-	}
-
-}
-
-void lattice::delete_shapes()
-{
-	for (auto i : shapes)
-	{
-		std::vector<coordinate<int>> new_wall = i->get_internal_nodes();
-		for (auto j = new_wall.begin(); j != new_wall.end(); j++ )
-		{
-			lattice::unset_is_wall_node(*j);
-		}
-	}
-	shapes.clear();
-}
-
-void lattice::print_shapes()
-{
-	std::cout << "Current objects: " << std::endl;
-	for (std::vector<geometry_2D*>::iterator i = shapes.begin(); i != shapes.end(); i++)
-	{
-		(*i)->print();
-	}
-}
-
-void lattice::print_bounding_nodes()
-{
-	for (std::vector<geometry_2D*>::iterator i = shapes.begin(); i != shapes.end(); i++)
-	{
-		(*i)->print_boundary_nodes();
-	}
-}
-
-void lattice::print_out_going_velocities(lb::coordinate<int> position)
-{
-	for (std::vector<geometry_2D*>::iterator i = shapes.begin(); i != shapes.end(); i++)
-	{
-		(*i)->print_out_going_velocities(position);
-	}
-}
-
-double lattice::get_shortest_distance_to_true_boundary(lb::coordinate<int> position)
-{
-	double result = std::numeric_limits<double>::max();
-	for (std::vector<geometry_2D*>::iterator i = shapes.begin(); i != shapes.end(); i++)
-	{
-		result = std::min(result,
-						  (*i)->get_shortest_distance_to_true_boundary(position));
-	}
-	return result;
 }
 
 void lattice::write_fields(std::string file_name)

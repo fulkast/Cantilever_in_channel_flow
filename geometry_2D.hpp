@@ -2,6 +2,7 @@
 #include <vector>
 #include "velocity_set.hpp"
 #include <map>
+#include <cassert>
 #pragma once
 
 class geometry_2D {
@@ -39,8 +40,9 @@ public:
     // print out going velocity indices at position
     void print_out_going_velocities(lb::coordinate<int> position);
 
-    // calculate proximity of boundary node to the shape's true boundary
-    virtual double get_shortest_distance_to_true_boundary(lb::coordinate<int> position) = 0;
+    // for a given velocity index emanating from a boundary node,
+    // find the length at intersection point with the true shape boundary
+    virtual double get_projection_distance(lb::coordinate<int> boundary_node, int lb_velocity_index ) = 0;
 
     // get out-going velocity set indices
     virtual std::vector<int> find_missing_populations(lb::coordinate<int> position) = 0;

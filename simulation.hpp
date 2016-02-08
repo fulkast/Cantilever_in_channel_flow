@@ -182,38 +182,6 @@ public: // ctor
 	void wall_bc()
 	{
 
-		//  test boundary rotation
-		for (int j=-1; j<=static_cast<int>(l.ny); ++j)
-		{
-			for (int i=-1; i<=static_cast<int>(l.nx); ++i)
-			{
-				l.get_node(i,j).rho() = 2;//1 - (Vmax/velocity_set().cs)*(Vmax/velocity_set().cs)/(2*K*K)*(Ky*Ky*std::cos(2*Kx*i)+Kx*Kx*std::cos(2*Ky*j));
-				//l.unset_is_wall_node(lb::coordinate<int>(i,j));
-			}
-		}
-
-		for (auto i = l.shapes.begin(); i != l.shapes.end(); i++)
-		{
-
-			std::vector<lb::coordinate<int>> currentBoundaryNodes = (*i)->get_boundary_nodes();
-			std::vector<lb::coordinate<int>> currentSolidNodes = (*i)->get_internal_nodes();
-			(*i)->set_orientation((*i)->get_orientation()+0.1);
-			(*i)->update_shape();
-
-			for(auto j = currentSolidNodes.begin(); j != currentSolidNodes.end(); j++)
-			{
-			//	l.set_is_wall_node(lb::coordinate<int>(j->i,j->j));
-			}
-
-			for(auto j = currentBoundaryNodes.begin(); j != currentBoundaryNodes.end(); j++)
-			{
-				//
-				l.get_node(j->i,j->j).rho() = 100;
-			}
-
-
-		}
-
 		#pragma omp parallel for
 		for (unsigned int i=0; i<l.wall_nodes.size(); ++i)
 		{
@@ -271,9 +239,6 @@ public: // ctor
 	/** @brief LB step */
 	void step()
 	{
-
-		std::cout << l.wall_nodes.size() << " is the number of wall nodes " << std::endl;
-		l.delete_walls();
 		//advect();
 		wall_bc();
 		//collide();

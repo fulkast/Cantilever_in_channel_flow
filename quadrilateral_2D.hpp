@@ -5,6 +5,7 @@
 #include <CGAL/Vector_2.h>
 #include <CGAL/Polygon_2.h>
 #include <CGAL/Bbox_2.h>
+#include <CGAL/Segment_2.h>
 
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
@@ -12,6 +13,7 @@ typedef K::Point_2 Point;
 typedef CGAL::Polygon_2<K> Polygon_2;
 typedef CGAL::Aff_transformation_2<K> Transformation;
 typedef CGAL::Vector_2<K> Vector;
+typedef CGAL::Segment_2<K> Segment;
 
 using namespace std;
 
@@ -111,17 +113,41 @@ public:
 
     }
 
-    double get_shortest_distance_to_true_boundary(lb::coordinate<int> position)
+    double get_projection_distance(lb::coordinate<int> boundary_node, int lb_velocity_index )
     {
-        double result = std::numeric_limits<double>::max();
-        Point currentPoint(position.i,position.j);
-        for (auto anEdge = mPolygon->edges_begin(); anEdge != mPolygon->edges_end(); anEdge++)
+        double squaredDistance = 0;
+        Point boundaryNodePoint(boundary_node.i,boundary_node.j);
+        Segment projectingRay(boundaryNodePoint,
+                              Point(boundary_node.i+lb::velocity_set().c[0][lb_velocity_index],
+                              boundary_node.j+lb::velocity_set().c[1][lb_velocity_index]));
+
+        for (auto edge = mPolygon->edges_begin(); edge != mPolygon->edges_end(); edge++)
         {
-            result = std::min(result,
-                              CGAL::to_double(CGAL::squared_distance(currentPoint,*anEdge))
-            );
+
+            if (CGAL::do_intersect(projectingRay,*edge))
+            {
+                CGAL::Object o = CGAL::intersection(projectingRay,*edge);
+                if(const Point* op = CGAL::object_cast<Point>(&o))
+                {
+                    std::cout << "point type " << std::endl;
+                    squaredDistance = CGAL::to_double(CGAL::squared_distance(boundaryNodePoint, *op));
+                } else if (const Segment* os = CGAL::object_cast<Segment>(&o))
+                {
+                    std::cout << "segment type " << std::endl;
+                    squaredDistance =
+                    std::min(CGAL::to_double(CGAL::squared_distance(boundaryNodePoint, os->target())),
+                    CGAL::to_double(CGAL::squared_distance(boundaryNodePoint, os->source())));
+                } else
+                {
+                    std::runtime_error(" no intersection at __function__");
+                }
+
+            }
+
+
         }
-        return std::sqrt(result);
+
+        return std::sqrt(squaredDistance);
     }
 
     std::vector<int> find_missing_populations(lb::coordinate<int> position)

@@ -49,10 +49,10 @@ public:
 
     }
 
-    double get_shortest_distance_to_true_boundary(lb::coordinate<int> position)
+    double get_projection_distance(lb::coordinate<int> boundary_node, int lb_velocity_index )
     {
-        int i = position.i - mCenterOfMass.i;
-        int j = position.j - mCenterOfMass.j;
+        int i = boundary_node.i - mCenterOfMass.i;
+        int j = boundary_node.j - mCenterOfMass.j;
 
         return sqrt(i*i + j*j) - mRadius;
     }
