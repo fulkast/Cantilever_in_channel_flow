@@ -5,9 +5,8 @@
 #endif
 #include <omp.h>
 #include "global.hpp"
-
 #include <iostream>
-#include "quadrilateral_2D.hpp"
+
 
 
 int main(int argc, char *argv[])
@@ -17,14 +16,16 @@ int main(int argc, char *argv[])
 	lb::simulation* sim = new lb::simulation(400,200,500,0.05);
 	sim->initialize();
 	sim->l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(100.5,100.5), 0, 20, 20));
-	// sim->l.add_to_shapes(new cylinder_2D(lb::coordinate<double>(100.5, 100.5),0,15))
+	sim->l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(150.5, 150.5),0,15,15));
 	sim->l.print_shapes();
 	std::cout << "Initialized lattice..." << std::endl;
 	std::cout << *sim << std::endl;
-	sim->l.print_bounding_nodes();
-	sim->l.print_out_going_velocities(lb::coordinate<int>(90,89));
-	std::cout << "The distance to true boundary at " << lb::coordinate<int>(89,100) <<
-			" is: " << sim->l.get_shortest_distance_to_true_boundary(lb::coordinate<int>(89,100)) << std::endl;
+
+	// Some stuff to test functionalities
+	// sim->l.print_bounding_nodes();
+	// sim->l.print_out_going_velocities(lb::coordinate<int>(90,89));
+	// std::cout << "The distance to true boundary at " << lb::coordinate<int>(89,100) <<
+	// 		" is: " << sim->l.get_shortest_distance_to_true_boundary(lb::coordinate<int>(89,100)) << std::endl;
 
 
 #ifdef USE_OPENGL_VISUALIZATION

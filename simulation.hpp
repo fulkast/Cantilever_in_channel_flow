@@ -12,6 +12,7 @@
 #include "H_root.hpp"
 #include "lattice.hpp"
 #include <sstream>
+#include "quadrilateral_2D.hpp"
 
 namespace lb {
 	
@@ -49,21 +50,9 @@ public: // ctor
 		// define amount to shift populations for advection
 		for (unsigned int i=0; i<velocity_set().size; ++i)
 		{
-			// **************************
-			// * fill in your code here * 
-			// Can be positive or negative --> determines the loop order
-			// **************************
+
 			shift[i] = velocity_set().c[0][i] + velocity_set().c[1][i]*l.real_nx;
-			// shift[0] = 0 
-			// shift[1] = 1						>0
-			// shift[2] = l.real_nx				>0
-			// shift[3] = -1					<0
-			// shift[4] = - l.real.nx			<0
-			// shift[5] = 1 + l.real_nx			>0
-			// shift[6] = -1 + l.real_nx		>0
-			// shift[7] = - (1 + l.real_nx) 	<0
-			// shift[8] = 1 - l.real_nx			<0
-			
+
 			
 		}
 	}
@@ -76,7 +65,6 @@ public: // ctor
 	 */
 	void initialize()
 	{
-		// **************************
 		// Variables
 		const float_type pi(std::acos(-1.0));
 		
@@ -96,7 +84,7 @@ public: // ctor
 			{		
 				l.get_node(i,j).u()   =  -((Vmax*Ky/std::sqrt(Kx*Kx+Ky*Ky))*std::sin(Ky*j)*std::cos(Kx*i));
 				l.get_node(i,j).v()   = ((Vmax*Ky/std::sqrt(Kx*Kx+Ky*Ky))*std::sin(Kx*i)*std::cos(Ky*j));
-				l.get_node(i,j).rho() = 2;//1 - (Vmax/velocity_set().cs)*(Vmax/velocity_set().cs)/(2*K*K)*(Ky*Ky*std::cos(2*Kx*i)+Kx*Kx*std::cos(2*Ky*j));
+				l.get_node(i,j).rho() = 2; //1 - (Vmax/velocity_set().cs)*(Vmax/velocity_set().cs)/(2*K*K)*(Ky*Ky*std::cos(2*Kx*i)+Kx*Kx*std::cos(2*Ky*j));
 				lb::velocity_set().equilibrate(l.get_node(i,j));
 								
 			}
@@ -202,7 +190,7 @@ public: // ctor
 
 			for(auto j = currentSolidNodes.begin(); j != currentSolidNodes.end(); j++)
 			{
-			//	l.set_is_wall_node(lb::coordinate<int>(j->i,j->j));
+				l.set_is_wall_node(lb::coordinate<int>(j->i,j->j));
 			}
 
 			for(auto j = currentBoundaryNodes.begin(); j != currentBoundaryNodes.end(); j++)
@@ -273,8 +261,10 @@ public: // ctor
 	{
 
 		std::cout << l.wall_nodes.size() << " is the number of wall nodes " << std::endl;
-		l.delete_walls();
+		
 		//advect();
+		//Reset walls.
+		l.delete_walls();
 		wall_bc();
 		//collide();
 		
