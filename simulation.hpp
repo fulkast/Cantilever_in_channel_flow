@@ -120,6 +120,7 @@ public: // ctor
 					}
 				}
 			}
+
 		// Periodic boundaries 
 			// East moving particles 
 			for (int j = 0; j <= l.ny-1; j++)
@@ -170,6 +171,24 @@ public: // ctor
 	void wall_bc()
 	{
 
+		// for (auto i : l.boundary_nodes)
+		/*
+		 {
+		 	int current_x = i.first.first;
+		 	int current_y = i.first.second;
+		 	lb::coordinate<int> a_node(current_x,current_y);
+		 	vector<int> missing_populations =  shapes.get_missing_populations(a_node);
+
+		 	double utgt = 0;
+
+		 	for (auto j : missing_populations)
+		 	{
+				int qi = shapes.get_projection_distance(a_node,lb::velocity_set().reverse_velocity(j));
+				utqt += qi * l.f
+		 	}
+
+		 }
+		 */
 		//  test boundary rotation
 		for (int j=-1; j<=static_cast<int>(l.ny); ++j)
 		{
