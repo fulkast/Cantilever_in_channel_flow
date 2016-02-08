@@ -234,9 +234,9 @@ private: // ctors
 		{
 			wall[k] = (sim->l.properties.has_flag_property("wall",k) ? 1 : 0);
 		}
-		// make v buffer, bind it and fill with values
-		//wall_vbo = make_buffer(GL_ARRAY_BUFFER, wall_data, field_vbo_size*sizeof(float), GL_STATIC_DRAW);
-		wall_vbo = make_buffer(GL_ARRAY_BUFFER, wall_data, field_vbo_size*sizeof(float), GL_DYNAMIC_DRAW);
+		// make wall buffer, bind it and fill with values
+		//wall_vbo = make_buffer(GL_ARRAY_BUFFER, wall_data, field_vbo_size*sizeof(float), GL_STATIC_DRAW); //original
+		wall_vbo = make_buffer(GL_ARRAY_BUFFER, wall_data, field_vbo_size*sizeof(float), GL_DYNAMIC_DRAW); //modified
 		// make shader attribute
 		location = wall_shader_ptr->get_attribute_location("wall");
 		glVertexAttribPointer(location, 1, GL_FLOAT, GL_FALSE, 0, (GLvoid *) 0);
@@ -347,7 +347,14 @@ public: // opengl callback functions
 		{
 			for (unsigned int i=0; i<num_steps; ++i) sim->step();
 			
-			
+			// query walls
+			for (unsigned int k=0; k<static_cast<unsigned int>(real_dim_x*real_dim_y); ++k)
+			{
+				wall[k] = (sim->l.properties.has_flag_property("wall",k) ? 1 : 0);
+			}
+			glBindBuffer(GL_ARRAY_BUFFER, wall_vbo);
+			glBufferData(GL_ARRAY_BUFFER, field_vbo_size*sizeof(float), wall_data, GL_DYNAMIC_DRAW);
+
 			if (float_cast)
 			{
 				for (unsigned int k=0; k<static_cast<unsigned int>(real_dim_x*real_dim_y); ++k)
@@ -355,6 +362,7 @@ public: // opengl callback functions
 					rho_data_cast[k] = static_cast<float>(sim->l.rho[k]);
 					u_data_cast[k] = static_cast<float>(sim->l.u[k]);
 					v_data_cast[k] = static_cast<float>(sim->l.v[k]);
+					// wall[k] = static_cast<float>(sim->l.properties.has_flag_property("wall",k) ? 1 : 0);
 				}
 			}
 			float rho_min = 999999; float rho_max=-999999;
@@ -639,6 +647,12 @@ public: // opengl callback functions
 			rho_shader_ptr->deactivate();
 			
 			draw_walls();
+
+			// //Test dynamic walls
+			// glBindBuffer(GL_ARRAY_BUFFER, wall_vbo);
+			// glBufferData(GL_ARRAY_BUFFER, field_vbo_size*sizeof(float), wall_data, GL_DYNAMIC_DRAW);
+			// GLint location = wall_shader_ptr->get_attribute_location("wall");
+
 			
 			glViewport(0, 0, width, height);
 			screen_text(width-panel_size+20,height-20,1,1,1,"density",GLUT_BITMAP_HELVETICA_18);
@@ -915,6 +929,7 @@ public: // opengl callback functions
 		glEnable(GL_BLEND);
 		glBindBuffer(GL_ARRAY_BUFFER, wall_vbo);
 		//glBufferData(GL_ARRAY_BUFFER, field_vbo_size*sizeof(float), wall_data, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, field_vbo_size*sizeof(float), wall_data, GL_DYNAMIC_DRAW);
 		GLint location = wall_shader_ptr->get_attribute_location("wall");
 		glVertexAttribPointer(location, 1, GL_FLOAT, GL_FALSE, 0, (GLvoid *) 0);
 		glEnableVertexAttribArray(location);
