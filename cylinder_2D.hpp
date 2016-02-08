@@ -2,11 +2,11 @@
 
 
 class cylinder_2D : public geometry_2D {
-                    // Define a 2D cylinder derived from the base geometry_2D
+    // Define a 2D cylinder derived from the base geometry_2D
 
 public:
 
-    cylinder_2D(lb::coordinate<double> centerOfMass, double orientation, double radius) :
+    cylinder_2D(lb::coordinate<double> centerOfMass, double orientation, int radius) :
             geometry_2D(centerOfMass,orientation), mRadius(radius) {
         update_boundary_and_internal_nodes();
     }
@@ -49,10 +49,10 @@ public:
 
     }
 
-    double get_shortest_distance_to_true_boundary(lb::coordinate<int> position)
+    double get_projection_distance(lb::coordinate<int> boundary_node, int lb_velocity_index )
     {
-        int i = position.i - mCenterOfMass.i;
-        int j = position.j - mCenterOfMass.j;
+        int i = boundary_node.i - mCenterOfMass.i;
+        int j = boundary_node.j - mCenterOfMass.j;
 
         return sqrt(i*i + j*j) - mRadius;
     }
@@ -79,5 +79,5 @@ public:
 
 
 private:
-    double mRadius = 0;
+    int mRadius = 0;
 };
