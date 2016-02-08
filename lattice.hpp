@@ -14,6 +14,8 @@
 #include <fstream>
 #include "geometry_2D.hpp"
 #include "cylinder_2D.hpp"
+#include <map>
+
 
 namespace lb {
 
@@ -411,9 +413,23 @@ public: // members
 	std::vector<float_type> u;                ///< flow x-velocity data
 	std::vector<float_type> v;                ///< flow y-velocity data
 	std::vector<node> nodes;                  ///< array holding all node objects
-	std::vector<node> wall_nodes;             ///< array holding node objects belonging to a solid wall 
+	/*
+	std::vector<node> wall_nodes;             ///< array holding node objects belonging to a solid wall
 	std::vector<node> boundary_nodes;	      ////<array holding all boundary node objeccts
 	std::vector<node> refill_nodes;	  			///< array holding all node objects that were solid --> fluid (refill nodes)
+	*/
+
+	// Maps holding node status data
+	std::map<std::pair<int,int>,
+			bool>
+			wall_nodes;
+	std::map<std::pair<int,int>,
+			bool>
+			boundary_nodes;
+	std::map<std::pair<int,int>,
+			bool>
+			refill_nodes;
+
 	property_array properties;                ///< properties datastructure (can hold many different properties per node)
 	const bool periodic_x;                    ///< flag whether to use periodicity in x direction
 	const bool periodic_y;                    ///< flag whether to use periodicity in y direction
@@ -552,7 +568,7 @@ void lattice::add_wall(coordinate<int> min_coord, coordinate<int> max_coord)
 			{
 				// set wall property
 				get_node(i,j).set_flag_property("wall");
-				wall_nodes.push_back( get_node(i,j) );
+				wall_nodes[std::make_pair(i,j)] = true;
 			}
 		}
 	}
@@ -566,49 +582,51 @@ void lattice::set_is_wall_node(coordinate<int> a_node)
 	{
 		// set wall property
 		get_node(a_node.i,a_node.j).set_flag_property("wall");
-		
+		wall_nodes[std::make_pair(a_node.i,a_node.j)] = true;
 	}
 }
 
 void lattice::unset_is_wall_node(coordinate<int> a_node)
 {
-	// check if node not yet labelled as wall
+	// check if is wall and then delete from walls
 	if (get_node(a_node.i,a_node.j).has_flag_property("wall"))
 	{
-		// set wall property
+		// unset from walls
 		get_node(a_node.i,a_node.j).unset_flag_property("wall");
+		wall_nodes.erase(std::make_pair(a_node.i,a_node.j));
 	}
 }
 
 void lattice::set_is_refill_node(coordinate<int> a_node)
 {
-	// check if node not yet labelled as wall
+	// check if node is not yet labelled as a refill node
 	if (!get_node(a_node.i,a_node.j).has_flag_property("refill"))
 	{
-		// set wall property
+		// set refill node property
 		get_node(a_node.i,a_node.j).set_flag_property("refill");
-		
+		refill_nodes[std::make_pair(a_node.i,a_node.j)] = true;
 	}
 }
 
 void lattice::unset_is_refill_node(coordinate<int> a_node)
 {
-	// check if node not yet labelled as wall
+	// check if node is refill node
 	if (get_node(a_node.i,a_node.j).has_flag_property("refill"))
 	{
-		// set wall property
+		// unset refill property
 		get_node(a_node.i,a_node.j).unset_flag_property("refill");
+		refill_nodes.erase(std::make_pair(a_node.i,a_node.j));
 	}
 }
 
 void lattice::set_is_boundary_node(coordinate<int> a_node)
 {
-	// check if node not yet labelled as wall
+	// check if node not yet labelled as boundary
 	if (!get_node(a_node.i,a_node.j).has_flag_property("boundary"))
 	{
-		// set wall property
+		// set boundary property
 		get_node(a_node.i,a_node.j).set_flag_property("boundary");
-		
+		boundary_nodes[std::make_pair(a_node.i,a_node.j)] = true;
 	}
 }
 
@@ -619,14 +637,15 @@ void lattice::unset_is_boundary_node(coordinate<int> a_node)
 	{
 		// set wall property
 		get_node(a_node.i,a_node.j).unset_flag_property("boundary");
+		boundary_nodes.erase(std::make_pair(a_node.i,a_node.j));
 	}
 }
 
 void lattice::delete_walls()
 {
-	for (node n : wall_nodes)
+	for (auto it = wall_nodes.begin(); it != wall_nodes.end(); it++)
 	{
-		n.unset_flag_property("wall");
+		get_node(it->first.first, it->first.second).unset_flag_property("wall");
 	}
 	wall_nodes.clear();
 }
