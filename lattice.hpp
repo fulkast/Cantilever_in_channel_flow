@@ -108,6 +108,8 @@ public: // access populations and macroscopic quantities
 	 */
 	inline float_type& v();
 
+
+
 public: // query and access properties
 	
 	/**
@@ -325,8 +327,6 @@ public: // walls
 	 *  @pre The resultant sphere should be in the domain
 	 */
 
-	void add_spherical_wall(coordinate<int> o, int r);
-
 	/*
 	 * Sets the given node as a wall node
 	 */
@@ -336,6 +336,25 @@ public: // walls
 	 * Unset the given node as a wall node
 	 */
 	void unset_is_wall_node(coordinate<int> a_node);
+	
+	/* Sets the given node as a refill node
+	 */
+	void set_is_refill_node(coordinate<int> a_node);
+
+	/*
+	 * Unset the given node as a refill node
+	 */
+	void unset_is_refill_node(coordinate<int> a_node);
+
+	/* Sets the given node as a boundary node
+	 */
+	void set_is_boundary_node(coordinate<int> a_node);
+
+	/*
+	 * Unset the given node as a boundary node
+	 */
+	void unset_is_boundary_node(coordinate<int> a_node);
+
 
 	/**
 	 * Adds a pointer to a 2d geometrical shape to the current frame
@@ -393,11 +412,14 @@ public: // members
 	std::vector<float_type> v;                ///< flow y-velocity data
 	std::vector<node> nodes;                  ///< array holding all node objects
 	std::vector<node> wall_nodes;             ///< array holding node objects belonging to a solid wall 
+	std::vector<node> boundary_nodes;	      ////<array holding all boundary node objeccts
+	std::vector<node> refill_nodes;	  			///< array holding all node objects that were solid --> fluid (refill nodes)
 	property_array properties;                ///< properties datastructure (can hold many different properties per node)
 	const bool periodic_x;                    ///< flag whether to use periodicity in x direction
 	const bool periodic_y;                    ///< flag whether to use periodicity in y direction
 	std::vector<geometry_2D*> shapes;		  ///< obstacle shapes in the current frame
 };
+
 
 
 
@@ -454,7 +476,9 @@ lattice::lattice(unsigned int _nx, unsigned int _ny)
 	properties.register_flag_property("fluid");
 	properties.register_flag_property("buffer");
 	properties.register_flag_property("wall");
-	
+	properties.register_flag_property("boundary");
+	properties.register_flag_property("refill");
+
 	// set up nodes and properties
 	unsigned int k(0);
 	for (unsigned int j=0; j<real_ny; ++j)
@@ -542,7 +566,7 @@ void lattice::set_is_wall_node(coordinate<int> a_node)
 	{
 		// set wall property
 		get_node(a_node.i,a_node.j).set_flag_property("wall");
-		wall_nodes.push_back( get_node(a_node.i,a_node.j) );
+		
 	}
 }
 
@@ -556,24 +580,45 @@ void lattice::unset_is_wall_node(coordinate<int> a_node)
 	}
 }
 
-
-
-void lattice::add_spherical_wall(coordinate<int> o, int r)
+void lattice::set_is_refill_node(coordinate<int> a_node)
 {
-	for (int j=-r; j <= r; ++j)
+	// check if node not yet labelled as wall
+	if (!get_node(a_node.i,a_node.j).has_flag_property("refill"))
 	{
-		for (int i=-r; i<=r; ++i)
-		{
-			// check if is within bounding sphere
-			if ((i*i) + (j*j) <= r*r)
-				// check if node not yet labelled as wall
-				if (!get_node(i+o.i,j+o.j).has_flag_property("wall"))
-				{
-					// set wall property
-					get_node(i+o.i,j+o.j).set_flag_property("wall");
-					wall_nodes.push_back( get_node(i+o.i,j+o.j) );
-				}
-		}
+		// set wall property
+		get_node(a_node.i,a_node.j).set_flag_property("refill");
+		
+	}
+}
+
+void lattice::unset_is_refill_node(coordinate<int> a_node)
+{
+	// check if node not yet labelled as wall
+	if (get_node(a_node.i,a_node.j).has_flag_property("refill"))
+	{
+		// set wall property
+		get_node(a_node.i,a_node.j).unset_flag_property("refill");
+	}
+}
+
+void lattice::set_is_boundary_node(coordinate<int> a_node)
+{
+	// check if node not yet labelled as wall
+	if (!get_node(a_node.i,a_node.j).has_flag_property("boundary"))
+	{
+		// set wall property
+		get_node(a_node.i,a_node.j).set_flag_property("boundary");
+		
+	}
+}
+
+void lattice::unset_is_boundary_node(coordinate<int> a_node)
+{
+	// check if node not yet labelled as wall
+	if (get_node(a_node.i,a_node.j).has_flag_property("boundary"))
+	{
+		// set wall property
+		get_node(a_node.i,a_node.j).unset_flag_property("boundary");
 	}
 }
 
