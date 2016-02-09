@@ -78,32 +78,32 @@ public: // ctor
 
 		//Add time dependence to u,v,rho0 or not since it is the initial condition?
 		// Initial velocities and density
-/*
-		//  initialize nodes
+
+		//  initialize nodes [channel flow]
 		for (int j=-1; j<=static_cast<int>(l.ny); ++j)
 		{
 			for (int i=-1; i<=static_cast<int>(l.nx); ++i)
 			{
-				if (i<100)
+				if (i!=-1)
 				{
-					l.get_node(i,j).u()   = 5;
+					l.get_node(i,j).u()  = 0;
 				}
 				else
 				{
-					l.get_node(i,j).u()   = 0;
-				}
+					l.get_node(-1,j).u()  = Vmax;
+				}		
 
 				l.get_node(i,j).v()   = 0;
 				l.get_node(i,j).rho() = 1;
 				lb::velocity_set().equilibrate(l.get_node(i,j));
-
 			}
 
 
 		}
-*/
 
-		//  initialize nodes
+
+		//  initialize nodes [test]
+		/*
 		for (int j=-1; j<=static_cast<int>(l.ny); ++j)
 		{
 			for (int i=-1; i<=static_cast<int>(l.nx); ++i)
@@ -115,7 +115,7 @@ public: // ctor
 
 			}
 		}
-
+		*/
 
 
 	}
@@ -126,9 +126,7 @@ public: // ctor
 	 *  Include periodic boundary conditions here also
 	 */
 	void advect()
-	{		
-		// **************************
-		
+	{			
 		// Advection with shift				
 			for (int k=0; k<velocity_set().size; k++)
 			{							
@@ -148,34 +146,36 @@ public: // ctor
 				}
 			}
 
-
-
-
-/*
-
 		//Flow boundary conditions
-			// East moving particles (incoming)
+			// INLET --> WEST WALL 
 			 for (int j = -1; j <= l.ny; j++)
 			 {
-				 l.f[1][l.index(-1,j)] = l.f[1][l.index(l.nx,j)];	//moving east
-				  l.f[5][l.index(-1,j)] = l.f[5][l.index(l.nx,j)];	// moving NE
-				  l.f[8][l.index(-1,j)] = l.f[8][l.index(l.nx,j)];	// moving SE
+			 	l.get_node(-1,j).u()   = Vmax;
+				l.get_node(-1,j).v()   = 0;
+				l.get_node(-1,j).rho() = 1;
+				lb::velocity_set().equilibrate(l.get_node(-1,j));
+
+				l.
+				//l.f[1][l.index(-1,j)]   = 1;
+				// l.f[1][l.index(-1,j)] = l.f[1][l.index(-1,j)];	//moving east
+				// l.f[5][l.index(-1,j)] = l.f[5][l.index(-1,j)];	// moving NE
+				// l.f[8][l.index(-1,j)] = l.f[8][l.index(-1,j)];	// moving SE
 			 }
 
 
-			// EAST WALL --> (outgoing) 
-			// 'quench' populations --> equilibrate?
+			// OUTLET --> EAST WALL  'quench' populations --> equilibrate?
 
-			for (int j = 0; j <= l.ny-1; j++)
+			for (int j = -1; j <= l.ny; j++)
 			{
-				 l.f[3][l.index(l.nx,j)] = l.f[3][l.index(l.nx-1,j)];	//moving West
-				 l.f[6][l.index(l.nx,j)] = l.f[6][l.index(l.nx-1,j)];	// moving NW
-				 l.f[7][l.index(l.nx,j)] = l.f[7][l.index(l.nx-1,j)];	// moving SW
+				l.get_node(l.nx,j).rho() = l.get_node(l.nx-1,j).rho();
+			// 	 l.f[3][l.index(l.nx,j)] = l.f[3][l.index(l.nx,j)];	//moving West
+			// 	 l.f[6][l.index(l.nx,j)] = l.f[6][l.index(l.nx,j)];	// moving NW
+			// 	 l.f[7][l.index(l.nx,j)] = l.f[7][l.index(l.nx,j)];	// moving SW
 			}
-*/
+	
 
 			// // no slip top and bottom
-			// North moving particles
+			// South wall
 			for (int i = 0; i <= l.nx-1; ++i)
 			{
 				l.f[2][l.index(i,0)-shift[2]] = l.f[4][l.index(i,-1)]; // moving north
@@ -183,7 +183,7 @@ public: // ctor
 				l.f[6][l.index(i,0)-shift[6]] = l.f[7][l.index(i,-1)]; // moving NW
 			}
 
-			// South moving particles
+			// North Wall
 			for (int i = l.nx-1; i >=0 ; --i)
 			{
 				l.f[4][l.index(i,l.ny-1)-shift[4]] = l.f[2][l.index(i,l.ny)]; // moving south
@@ -191,8 +191,6 @@ public: // ctor
 				l.f[7][l.index(i,l.ny-1)-shift[7]] = l.f[6][l.index(i,l.ny)]; // moving SE
 			}
 
-
-		// **************************
 		
 	}
 	
@@ -205,8 +203,7 @@ public: // ctor
 		{
 			for (int i=-1; i<=static_cast<int>(l.nx); ++i)
 			{
-				l.get_node(i,j).rho() = 2;//1 - (Vmax/velocity_set().cs)*(Vmax/velocity_set().cs)/(2*K*K)*(Ky*Ky*std::cos(2*Kx*i)+Kx*Kx*std::cos(2*Ky*j));
-				//l.unset_is_wall_node(lb::coordinate<int>(i,j));
+				l.get_node(i,j).rho() = 2;
 			}
 		}
 
