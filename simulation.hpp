@@ -170,6 +170,9 @@ public: // ctor
 	/**  @brief apply wall boundary conditions */
 	void wall_bc()
 	{
+		// fix_missing_populations()
+
+
 
 		// for (auto i : l.boundary_nodes)
 		/*
@@ -238,7 +241,7 @@ public: // ctor
 		{
 			for(int j=0 ; j<=l.ny-1; ++j)
 			{
-				
+
 				// Calculate new density
 				l.get_node(i,j).rho() = 0;
 				for(int k=0; k<velocity_set().size; ++k)
@@ -279,14 +282,15 @@ public: // ctor
 	void step()
 	{
 
-		std::cout << l.wall_nodes.size() << " is the number of wall nodes " << std::endl;
-		
-		//advect();
-		//Reset walls.
-		l.delete_walls();
+		advect();
 		wall_bc();
-		//collide();
-		
+		collide();
+
+		// eval_forces();
+		// move_shape();
+		// find_and_fix_refill_nodes();
+
+
 		// file io
 		if ( file_output && ( ((time+1) % output_freq) == 0 || time == 0 ) )
 		{
@@ -321,7 +325,40 @@ public: // print
 		os << "beta:   " << sim.beta << "\n";
 		return os;
 	}
-	
+
+public:	// for interaction with immersed shape
+
+	void set_shape(geometry_2D* a_shape)
+	{
+		mSingleImmersedBody = a_shape;
+	}
+
+	void fix_missing_populations()
+	{
+		// boundary nodes iterator
+		std::vector<lb::coordinate<int>> currentBoundary = mSingleImmersedBody->get_boundary_nodes();
+		for (auto it = currentBoundary.begin(); it != currentBoundary.end(); it++)
+		{
+
+			// lattice representation indices for current node
+			int iIndex = it->i; int jIndex = it->j;
+
+			// current missing populations iterator
+			std::vector<int> currentMissingPopulations = mSingleImmersedBody->find_missing_populations(lb::coordinate<int>(iIndex,jIndex));
+			for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations; mIt++)
+			{
+
+
+
+			}
+		}
+
+
+		//l.f[missing_pop_index][node_index] = ...
+	}
+
+
+
 public: // members
 
 	lattice l;                 ///< lattice
@@ -334,6 +371,9 @@ public: // members
 	bool file_output;          ///< flag whether to write files
 	unsigned int output_freq;  ///< file output frequency
 	unsigned int output_index; ///< index for file naming
+
+	geometry_2D* mSingleImmersedBody = nullptr; //An immersed object interacting with the fluid
+
 };
 
 } // lb
