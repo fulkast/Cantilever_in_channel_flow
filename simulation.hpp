@@ -134,6 +134,7 @@ public: // ctor
 				{
 					for (int i = 0 ; i < l.real_size+shift[k]; i ++)
 					{
+						// if((i % l.real_nx == 0) && (k==1 || k==5 || k==8 )) continue;
 						l.f[k][i] = l.f[k][i-shift[k]];
 					}
 				}
@@ -141,6 +142,7 @@ public: // ctor
 				{
 					for (int i = l.real_size-1; i >= 0+shift[k]; i--)
 					{
+						// if((i % (l.real_nx-1) == 0) && (k==3 || k==6 || k==7)) continue;
 						l.f[k][i] = l.f[k][i-shift[k]];
 					}
 				}
@@ -148,30 +150,29 @@ public: // ctor
 
 		//Flow boundary conditions
 			// INLET --> WEST WALL 
-			 for (int j = -1; j <= l.ny; j++)
-			 {
-			 	l.get_node(-1,j).u()   = Vmax;
-				l.get_node(-1,j).v()   = 0;
-				l.get_node(-1,j).rho() = 1;
-				lb::velocity_set().equilibrate(l.get_node(-1,j));
+			 // for (int j = -1; j <= l.ny; j++)
+			 // {
+			 // // 	l.get_node(-1,j).u()   = Vmax;
+				// // l.get_node(-1,j).v()   = 0;
+				// // l.get_node(-1,j).rho() = 1;
+				// // lb::velocity_set().equilibrate(l.get_node(-1,j));
+				// l.f[1][l.index(0,j)] = l.f[1][l.index(-1,j)];
+				// l.f[5][l.index(0,j)] = l.f[5][l.index(-1,j)];
+				// l.f[8][l.index(0,j)] = l.f[8][l.index(-1,j)];
 
-				l.
-				//l.f[1][l.index(-1,j)]   = 1;
-				// l.f[1][l.index(-1,j)] = l.f[1][l.index(-1,j)];	//moving east
-				// l.f[5][l.index(-1,j)] = l.f[5][l.index(-1,j)];	// moving NE
-				// l.f[8][l.index(-1,j)] = l.f[8][l.index(-1,j)];	// moving SE
-			 }
+
+			 // }
 
 
 			// OUTLET --> EAST WALL  'quench' populations --> equilibrate?
 
-			for (int j = -1; j <= l.ny; j++)
-			{
-				l.get_node(l.nx,j).rho() = l.get_node(l.nx-1,j).rho();
-			// 	 l.f[3][l.index(l.nx,j)] = l.f[3][l.index(l.nx,j)];	//moving West
-			// 	 l.f[6][l.index(l.nx,j)] = l.f[6][l.index(l.nx,j)];	// moving NW
-			// 	 l.f[7][l.index(l.nx,j)] = l.f[7][l.index(l.nx,j)];	// moving SW
-			}
+			// for (int j = -1; j <= l.ny; j++)
+			// {
+			// 	// l.get_node(l.nx,j).rho() = l.get_node(l.nx-1,j).rho();
+			// 	 l.f[3][l.index(l.nx,j)] = l.f[3][l.index(l.nx-1,j)];	//moving West
+			// 	 l.f[6][l.index(l.nx,j)] = l.f[6][l.index(l.nx-1,j)];	// moving NW
+			// 	 l.f[7][l.index(l.nx,j)] = l.f[7][l.index(l.nx-1,j)];	// moving SW
+			// }
 	
 
 			// // no slip top and bottom
