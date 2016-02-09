@@ -335,7 +335,7 @@ public:	// for interaction with immersed shape
 
 	void fix_missing_populations()
 	{
-		// boundary nodes iterator
+	/*	// boundary nodes iterator
 		std::vector<lb::coordinate<int>> currentBoundary = mSingleImmersedBody->get_boundary_nodes();
 		for (auto it = currentBoundary.begin(); it != currentBoundary.end(); it++)
 		{
@@ -353,7 +353,7 @@ public:	// for interaction with immersed shape
 			}
 		}
 
-
+*/
 		//l.f[missing_pop_index][node_index] = ...
 	}
 

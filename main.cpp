@@ -16,24 +16,14 @@ int main(int argc, char *argv[])
 
 	lb::simulation* sim = new lb::simulation(40*D,20*D,20,0.05); // nx, ny, Re, v_max
 	sim->initialize();
-<<<<<<< HEAD
-	// sim->l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(100.5,100.5), 0, 20, 20));
-	// sim->l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(150.5, 150.5),0,15,15));
-	sim->l.add_to_shapes(new cylinder_2D(lb::coordinate<double>(10*D,10*D),0,D/2));
-	sim->l.print_shapes();
-	std::cout << "Initialized lattice..." << std::endl;
-	std::cout << *sim << std::endl;
+
 
 	// Some stuff to test functionalities
 	// sim->l.print_bounding_nodes();
 	// sim->l.print_out_going_velocities(lb::coordinate<int>(90,89));
 	// std::cout << "The distance to true boundary at " << lb::coordinate<int>(89,100) <<
 	// 		" is: " << sim->l.get_shortest_distance_to_true_boundary(lb::coordinate<int>(89,100)) << std::endl;
-=======
-	std::cout << "Initialized lattice..." << std::endl;
-	std::cout << *sim << std::endl;
 
->>>>>>> de9aaa094bf086bbab2ee6d3636bcc786a4a288d
 
 
 #ifdef USE_OPENGL_VISUALIZATION
