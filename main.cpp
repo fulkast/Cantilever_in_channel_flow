@@ -1,4 +1,3 @@
-
 #include "simulation.hpp"
 #ifdef USE_OPENGL_VISUALIZATION
 #include "visualization.hpp"
@@ -31,21 +30,21 @@ int main(int argc, char *argv[])
 
 
 #ifdef USE_OPENGL_VISUALIZATION
-	
-		lb::visualization::initialize(sim,argc,argv);
-		lb::visualization::get_instance().run();
+
+	lb::visualization::initialize(sim,argc,argv);
+	lb::visualization::get_instance().run();
 
 
 
-	#else
-	
-		// Here are some hints for getting aquainted with the lattice class
+#else
+
+	// Here are some hints for getting aquainted with the lattice class
 		// ================================================================
 		
 //		// how to print the lattice:
 //		// -------------------------
 //
-//		std::cout << sim->l << std::endl;
+		// std::cout << sim->l << std::endl;
 //
 //		// how to access the lattice:
 //		// --------------------------
@@ -67,15 +66,16 @@ int main(int argc, char *argv[])
 		
 		// use a loop like this to run the simulation
 		
-		for (unsigned int i=0; i<500; ++i)
+		for (unsigned int i=0; i<2; ++i)
 		{
 			std::cout << "Starting step: " << i << std::endl;
 			sim->step();
 			std::cout << "Made a step: " << i << std::endl;
+			std::cout << sim->l << std::endl;
 		}
 
 //	std::cout<<sim->l << std::endl;
-	#endif
-	
+#endif
+
 	return 0;
 }

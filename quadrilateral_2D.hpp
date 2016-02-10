@@ -113,9 +113,13 @@ public:
 
     }
 
-    double get_projection_distance(lb::coordinate<int> boundary_node, int lb_velocity_index )
+    double get_ray_length_at_intersection(lb::coordinate<int> boundary_node, int lb_velocity_index)
     {
         double squaredDistance = 0;
+
+        // flip directions to get the ray opposite of the missing population index's ray
+        lb_velocity_index = lb::velocity_set().incoming_velocity_to_outgoing_velocity(lb_velocity_index);
+
         Point boundaryNodePoint(boundary_node.i,boundary_node.j);
         Segment projectingRay(boundaryNodePoint,
                               Point(boundary_node.i+lb::velocity_set().c[0][lb_velocity_index],
@@ -153,6 +157,13 @@ public:
     std::vector<int> find_missing_populations(lb::coordinate<int> position)
     {
         return mMissingPopulationIndexMap[make_pair(position.i,position.j)];
+    }
+
+    lb::coordinate<double> get_velocity_at_intersection(lb::coordinate<int> boundary_node, int lb_velocity_index )
+    {
+
+        return lb::coordinate<double>(0.0,0.0);
+
     }
 
 

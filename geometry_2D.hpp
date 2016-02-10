@@ -42,7 +42,11 @@ public:
 
     // for a given velocity index emanating from a boundary node,
     // find the length at intersection point with the true shape boundary
-    virtual double get_projection_distance(lb::coordinate<int> boundary_node, int lb_velocity_index ) = 0;
+    virtual double get_ray_length_at_intersection(lb::coordinate<int> boundary_node, int lb_velocity_index) = 0;
+
+    // for a given velocity index emanating from a boundary node,
+    // find the velocity at the intersection point with the true shape boundary
+    virtual lb::coordinate<double> get_velocity_at_intersection(lb::coordinate<int> boundary_node, int lb_velocity_index ) = 0;
 
     // get out-going velocity set indices
     virtual std::vector<int> find_missing_populations(lb::coordinate<int> position) = 0;
@@ -56,7 +60,7 @@ protected:
     std::vector<lb::coordinate<int>> mBoundaryNodes;               // current object's boundaries
     std::vector<lb::coordinate<int>> mInternalNodes;               // current object's wall internal nodes
     std::map<std::pair<int,int>,std::vector<int>>
-            mMissingPopulationIndexMap;                             // curre boundary's out going velocity
+            mMissingPopulationIndexMap;                             // current boundary's out going velocity
     // indices
 
 };
