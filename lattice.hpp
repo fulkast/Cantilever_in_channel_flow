@@ -348,9 +348,9 @@ public: // walls
 	 */
 	void unset_is_refill_node(coordinate<int>& a_node);
 
-	void set_u_target_at_node(coordinate<int>& a_node, double _u);
+	void set_u_target_at_node(coordinate<int>& a_node, coordinate<double> _u);
 
-	double get_u_target_at_node(coordinate<int>& a_node);
+	coordinate<double> get_u_target_at_node(coordinate<int>& a_node);
 
 	/* Sets the given node as a boundary node
 	 */
@@ -433,7 +433,7 @@ public: // members
 			bool>
 			refill_nodes;
 	std::map<std::pair<int,int>,
-			double>
+			std::pair<double,double>>
 			u_target_at_node;
 
 	property_array properties;                ///< properties datastructure (can hold many different properties per node)
@@ -614,15 +614,16 @@ void lattice::set_is_refill_node(coordinate<int>& a_node)
 	}
 }
 
-void lattice::set_u_target_at_node(coordinate<int>& a_node, double _u)
+void lattice::set_u_target_at_node(coordinate<int>& a_node, coordinate<double> _u)
 {
 		// set the u_target at current node
-		u_target_at_node[std::make_pair(a_node.i,a_node.j)] = _u;
+		u_target_at_node[std::make_pair(a_node.i,a_node.j)] = std::make_pair(_u.j,_u.j);
 }
 
-double lattice::get_u_target_at_node(coordinate<int>& a_node)
+coordinate<double> lattice::get_u_target_at_node(coordinate<int>& a_node)
 {
-	return u_target_at_node[std::make_pair(a_node.i,a_node.j)];
+	std::pair<double,double> velocity = u_target_at_node[std::make_pair(a_node.i,a_node.j)];
+	return lb::coordinate<double>(velocity.first,velocity.second);
 }
 
 void lattice::unset_is_refill_node(coordinate<int>& a_node)

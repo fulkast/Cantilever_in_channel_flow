@@ -333,20 +333,32 @@ public:	// for interaction with immersed shape
 			int iIndex = it->i; int jIndex = it->j;
 			lb::coordinate<int> currentCoordinate(iIndex,jIndex);
 
-			// current missing populations iterator
+			// find missing populations at current node
 			std::vector<int> currentMissingPopulations = mSingleImmersedBody->find_missing_populations(currentCoordinate);
-			l.set_u_target_at_node(currentCoordinate , 0.0);		// reset current u_target
-			double currentUTarget = 0.0;
+			// reset the u_target to get ready for recalculation
+			l.set_u_target_at_node(currentCoordinate , lb::coordinate<double>(0.0,0.0));
+
+			//-- The following naming is in accordance with equation 14 from reference paper of Dorschner et al. -------//
+
+			lb::coordinate<double> u_tgt(0.0,0.0);
+
+			// iterate through all missing populations at current node
 			for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++)
 			{
 				lb::coordinate<int> currentVelocity(lb::velocity_set().c[0][*mIt] , lb::velocity_set().c[1][*mIt]);		// get the velocity represented by the current missing population index
 				lb::node fluidNeighborNode = l.get_node(iIndex + currentVelocity.i , jIndex + currentVelocity.j); 		// get the fluid node to interpolate velocity from
 				lb::coordinate<double> adjacentFluidVelocity(fluidNeighborNode.u(),fluidNeighborNode.v());				// get its velocity
 
+				double q_i =  mSingleImmersedBody->get_ray_length_at_intersection(currentCoordinate,*mIt)/lb::velocity_set().magnitude_c[*mIt];
+				lb::coordinate<double> adjacentWallVelocity = mSingleImmersedBody->get_velocity_at_intersection(currentCoordinate,*mIt);
+
+				u_tgt.i += (q_i * adjacentFluidVelocity.i + adjacentWallVelocity.i) / (1 + q_i);
+				u_tgt.j += (q_i * adjacentFluidVelocity.j + adjacentWallVelocity.j) / (1 + q_i);
 //				currentUTarget += mSingleImmersedBody->
-
-
 			}
+
+			u_tgt.i /= currentMissingPopulations.size(); u_tgt.j /= currentMissingPopulations.size();
+			l.set_u_target_at_node(currentCoordinate,u_tgt);
 		}
 
 
