@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 //		// how to print the lattice:
 //		// -------------------------
 //
-//		std::cout << sim->l << std::endl;
+		// std::cout << sim->l << std::endl;
 //
 //		// how to access the lattice:
 //		// --------------------------
@@ -66,11 +66,12 @@ int main(int argc, char *argv[])
 		
 		// use a loop like this to run the simulation
 		
-		for (unsigned int i=0; i<500; ++i)
+		for (unsigned int i=0; i<2; ++i)
 		{
 			std::cout << "Starting step: " << i << std::endl;
 			sim->step();
 			std::cout << "Made a step: " << i << std::endl;
+			std::cout << sim->l << std::endl;
 		}
 
 //	std::cout<<sim->l << std::endl;
