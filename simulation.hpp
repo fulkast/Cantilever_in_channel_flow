@@ -380,7 +380,7 @@ public:	// for interaction with immersed shape
 
 		// clear target rho and u
 		l.clear_rho_target_for_all_boundary_nodes();
-		l.clear_rho_target_for_all_boundary_nodes();
+		l.clear_u_target_for_all_boundary_nodes();
 
 		for (auto it = currentBoundary.begin(); it != currentBoundary.end(); it++)
 		{
@@ -398,9 +398,17 @@ public:	// for interaction with immersed shape
 			double rho_s = 0;
 			std::vector<bool> rho_bb_has_added_index_i(lb::velocity_set().size,false);
 
+			lb::node current_node= l.get_node(iIndex,jIndex);
+			double dvdy = 0;
+			double dvdx = 0;
+			double dudx = 0;
+			double dudy = 0;
+
 			// iterate through all missing populations at current node
 			for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++)
 			{
+				
+
 				lb::coordinate<int> currentVelocity(lb::velocity_set().c[0][*mIt] , lb::velocity_set().c[1][*mIt]);		// get the velocity represented by the current missing population index
 				lb::node fluidNeighborNode = l.get_node(iIndex + currentVelocity.i , jIndex + currentVelocity.j); 		// get the fluid node to interpolate velocity from
 				lb::coordinate<double> adjacentFluidVelocity(fluidNeighborNode.u(),fluidNeighborNode.v());				// get its velocity
@@ -420,6 +428,20 @@ public:	// for interaction with immersed shape
 				// work on rho s
 				double ci_dot_u_wi = currentVelocity.i * adjacentWallVelocity.i + currentVelocity.j + adjacentWallVelocity.j;
 				rho_s += lb::velocity_set().W[*mIt]*ci_dot_u_wi;
+
+				//velocity gradient
+				if (currentVelocity.i == 0)
+				{
+					dvdy = currentVelocity.j * (adjacentFluidVelocity.j - current_node.v());
+					dudy = currentVelocity.j * (adjacentFluidVelocity.i - current_node.u());
+				}
+				else if (currentVelocity.j == 0)
+				{
+					dudx = currentVelocity.i * (adjacentFluidVelocity.i - current_node.u());// velocity comp. 'i', derived in 'i' direction
+					dvdx = currentVelocity.i * (adjacentFluidVelocity.j - current_node.v());
+				}
+					
+
 			}
 
 			rho_s *= 6*mDensityRho;
@@ -432,11 +454,22 @@ public:	// for interaction with immersed shape
 				}
 			}
 			// complete rho_tgt update
-			l.set_rho_target_at_node(currentCoordinate,rho_bb+rho_s);
+			double rho_tgt = rho_bb+rho_s ;
+			l.set_rho_target_at_node(currentCoordinate,rho_tgt);
 
 			u_tgt.i /= currentMissingPopulations.size(); u_tgt.j /= currentMissingPopulations.size();
 			l.set_u_target_at_node(currentCoordinate,u_tgt);
+
+			// Pressure tensor
+			double Pxxeq = rho_tgt*lb::velocity_set().cs + rho_tgt * u_tgt.i * u_tgt.i ;
+			double Pyyeq = rho_tgt*lb::velocity_set().cs + rho_tgt * u_tgt.j * u_tgt.j ;
+			double Pxyeq = rho_tgt * u_tgt.i * u_tgt.j ; // also --> Pyxeq 
+
+			double Pxxneq = -rho_tgt*lb::velocity_set().cs*lb::velocity_set().cs/(2*beta)*(dudx + dudx);
+			double Pyyneq = -rho_tgt*lb::velocity_set().cs*lb::velocity_set().cs/(2*beta)*(dvdy + dvdy);
+			double Pxyneq = -rho_tgt*lb::velocity_set().cs*lb::velocity_set().cs/(2*beta)*(dudy + dvdx);
 		}
+
 
 
 		//l.f[missing_pop_index][node_index] = ...
