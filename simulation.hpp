@@ -35,17 +35,22 @@ public: // ctor
 	 *  @param[in] _Re   Reynolds number
 	 *  @param[in] _Vmax mean flow velocity
 	 */
-	simulation(unsigned int nx, unsigned int ny, float_type _Re, float_type _Vmax)
-	: l(nx, ny), 
-	  shift(velocity_set().size),
-	  Re(_Re), 
-	  Vmax(_Vmax),
-	  visc(_Vmax*nx/_Re ), // 
-	  beta( 1/(2*visc/(velocity_set().cs*velocity_set().cs) + 1) ), 
-	  time(0),
-	  file_output(true), // set to true if you want to write files
-	  output_freq(100),
-	  output_index(0)
+	simulation(unsigned int nx, unsigned int ny, float_type _Re, float_type _Vmax, const double _D)
+			: l(nx, ny),
+			  shift(velocity_set().size),
+			  Re(_Re),
+			  Vmax(_Vmax),
+			  D(_D),
+			// visc(_Vmax*nx/_Re ), // visc = Vmax*D/Re
+			  visc(_Vmax*D/_Re),
+			  beta( 1/(2*visc/(velocity_set().cs*velocity_set().cs) + 1) ),
+			  time(0),
+			  file_output(true), // set to true if you want to write files
+			  output_freq(100),
+			  output_index(0),
+			  mDensityRho(1.0),
+			  mHorizontalChannelVelocity(0.5)
+
 	{ 
 		// define amount to shift populations for advection
 		for (unsigned int i=0; i<velocity_set().size; ++i)
@@ -81,10 +86,11 @@ public: // ctor
 		for (int j=-1; j<=static_cast<int>(l.ny); ++j)
 		{
 			for (int i=-1; i<=static_cast<int>(l.nx); ++i)
-			{		
-				l.get_node(i,j).u()   =  -((Vmax*Ky/std::sqrt(Kx*Kx+Ky*Ky))*std::sin(Ky*j)*std::cos(Kx*i));
-				l.get_node(i,j).v()   = ((Vmax*Ky/std::sqrt(Kx*Kx+Ky*Ky))*std::sin(Kx*i)*std::cos(Ky*j));
-				l.get_node(i,j).rho() = 2; //1 - (Vmax/velocity_set().cs)*(Vmax/velocity_set().cs)/(2*K*K)*(Ky*Ky*std::cos(2*Kx*i)+Kx*Kx*std::cos(2*Ky*j));
+			{
+
+				l.get_node(i,j).u()   = mHorizontalChannelVelocity; // -((Vmax*Ky/std::sqrt(Kx*Kx+Ky*Ky))*std::sin(Ky*j)*std::cos(Kx*i));
+				l.get_node(i,j).v()   = 0;//((Vmax*Ky/std::sqrt(Kx*Kx+Ky*Ky))*std::sin(Kx*i)*std::cos(Ky*j));
+				l.get_node(i,j).rho() = mDensityRho;// - (Vmax/velocity_set().cs)*(Vmax/velocity_set().cs)/(2*K*K)*(Ky*Ky*std::cos(2*Kx*i)+Kx*Kx*std::cos(2*Ky*j));
 				lb::velocity_set().equilibrate(l.get_node(i,j));
 								
 			}
@@ -121,48 +127,62 @@ public: // ctor
 				}
 			}
 
-		// Periodic boundaries 
-			// East moving particles 
+
+			// Variables
+			const float_type pi(std::acos(-1.0));
+
+			int lambdax = 1;
+			int lambday = 1;
+			const float_type Kx = (2*pi)/(lambdax*l.nx); // Set L to nx
+			const float_type Ky = (2*pi)/(lambday*l.nx); // Set L to nx
+			const float_type K = std::sqrt(Kx*Kx + Ky*Ky);
+
+			// Periodic boundaries
+			// East moving particles
 			for (int j = 0; j <= l.ny-1; j++)
 			{
-			 l.f[1][l.index(0,j)-shift[1]] = l.f[1][l.index(l.nx,j)];	//moving east
-			 l.f[5][l.index(0,j)-shift[5]] = l.f[5][l.index(l.nx,j)];	// moving NE
-			 l.f[8][l.index(0,j)-shift[8]] = l.f[8][l.index(l.nx,j)];	// moving SE
+				l.get_node(0,j).u()   = mHorizontalChannelVelocity;// -((Vmax*Ky/std::sqrt(Kx*Kx+Ky*Ky))*std::sin(Ky*j)*std::cos(Kx*0));
+				l.get_node(0,j).v()   = 0;//((Vmax*Ky/std::sqrt(Kx*Kx+Ky*Ky))*std::sin(Kx*i)*std::cos(Ky*j));
+				l.get_node(0,j).rho() = mDensityRho;// - (Vmax/velocity_set().cs)*(Vmax/velocity_set().cs)/(2*K*K)*(Ky*Ky*std::cos(2*Kx*i)+Kx*Kx*std::cos(2*Ky*j));
+				lb::velocity_set().equilibrate(l.get_node(0,j));
+
 			}
-			
-			// West moving particles 
+//
+			// West moving particles
 			for (int j = 0; j <= l.ny-1; j++)
 			{
-			 l.f[3][l.index(l.nx-1,j)-shift[3]] = l.f[3][l.index(-1,j)];	//moving West
-			 l.f[6][l.index(l.nx-1,j)-shift[6]] = l.f[6][l.index(-1,j)];	// moving NW
-			 l.f[7][l.index(l.nx-1,j)-shift[7]] = l.f[7][l.index(-1,j)];	// moving SW
+				lb::float_type feqLocal[9];
+				velocity_set().f_eq(feqLocal,l.get_node(l.nx-1,j).rho(),l.get_node(l.nx-1,j).u(),l.get_node(l.nx-1,j).v());
+
+				for(int k=0; k<velocity_set().size; ++k)
+				{
+
+					l.get_node(l.nx-1,j).f(k) = feqLocal[k];
+				}
+
 			}
-			
+
 			// North moving particles
 			for (int i = 0; i <= l.nx-1; ++i)
 			{
-			 l.f[2][l.index(i,0)-shift[2]] = l.f[2][l.index(i,l.ny)]; // moving north
-			 l.f[5][l.index(i,0)-shift[5]] = l.f[5][l.index(i,l.ny)]; // moving NE
-			 l.f[6][l.index(i,0)-shift[6]] = l.f[6][l.index(i,l.ny)]; // moving NW
+			 l.f[4][l.index(i,l.ny-1)-shift[4]] = l.f[2][l.index(i,l.ny)]; // moving north
+			 l.f[8][l.index(i,l.ny-1)-shift[8]] = l.f[5][l.index(i,l.ny)]; // moving NE
+			 l.f[7][l.index(i,l.ny-1)-shift[7]] = l.f[6][l.index(i,l.ny)]; // moving NW
 			}
 			
 			// South moving particles
 			for (int i = 0; i <= l.nx-1; ++i)
 			{
-			 l.f[4][l.index(i,l.ny-1)-shift[4]] = l.f[4][l.index(i,-1)]; // moving south
-			 l.f[7][l.index(i,l.ny-1)-shift[7]] = l.f[7][l.index(i,-1)]; // moving SW
-			 l.f[8][l.index(i,l.ny-1)-shift[8]] = l.f[8][l.index(i,-1)]; // moving SE
+			 l.f[2][l.index(i,0)-shift[2]] = l.f[4][l.index(i,-1)]; // moving south
+			 l.f[6][l.index(i,0)-shift[6]] = l.f[7][l.index(i,-1)]; // moving SW
+			 l.f[5][l.index(i,0)-shift[5]] = l.f[8][l.index(i,-1)]; // moving SE
 			}
-		
-			// Buffer CORNERS
-			l.f[5][l.index(0,0)-shift[5]] = l.f[5][l.index(l.nx,l.ny)] ; // sw corner
-			l.f[6][l.index(l.nx-1,0)-shift[6]] = l.f[6][l.index(-1,l.ny)] ; // se corner
-			l.f[7][l.index(l.nx-1,l.ny-1)-shift[7]] = l.f[7][l.index(-1,-1)] ; // ne corner
-			l.f[8][l.index(0,l.ny-1)-shift[8]] = l.f[8][l.index(l.nx,-1)] ; // NW corner
-			
 
-		
-	
+
+
+			// Buffer CORNERS
+			// ignored on purpose
+
 		// **************************
 		
 	}
@@ -192,37 +212,6 @@ public: // ctor
 
 		 }
 		 */
-		//  test boundary rotation
-		for (int j=-1; j<=static_cast<int>(l.ny); ++j)
-		{
-			for (int i=-1; i<=static_cast<int>(l.nx); ++i)
-			{
-				l.get_node(i,j).rho() = 2;//1 - (Vmax/velocity_set().cs)*(Vmax/velocity_set().cs)/(2*K*K)*(Ky*Ky*std::cos(2*Kx*i)+Kx*Kx*std::cos(2*Ky*j));
-				//l.unset_is_wall_node(lb::coordinate<int>(i,j));
-			}
-		}
-
-		for (auto i = l.shapes.begin(); i != l.shapes.end(); i++)
-		{
-
-			std::vector<lb::coordinate<int>> currentBoundaryNodes = (*i)->get_boundary_nodes();
-			std::vector<lb::coordinate<int>> currentSolidNodes = (*i)->get_internal_nodes();
-			(*i)->set_orientation((*i)->get_orientation()+0.1);
-			(*i)->update_shape();
-
-			for(auto j = currentSolidNodes.begin(); j != currentSolidNodes.end(); j++)
-			{
-				l.set_is_wall_node(lb::coordinate<int>(j->i,j->j));
-			}
-
-			for(auto j = currentBoundaryNodes.begin(); j != currentBoundaryNodes.end(); j++)
-			{
-				//
-				l.get_node(j->i,j->j).rho() = 100;
-			}
-
-
-		}
 
 		#pragma omp parallel for
 		for (unsigned int i=0; i<l.wall_nodes.size(); ++i)
@@ -367,12 +356,16 @@ public: // members
 	const float_type Vmax;     ///< mean flow velocity
 	const float_type visc;     ///< viscosity
 	const float_type beta;     ///< LB parameter beta
+	const double D;
 	unsigned int time;         ///< simulation time
 	bool file_output;          ///< flag whether to write files
 	unsigned int output_freq;  ///< file output frequency
 	unsigned int output_index; ///< index for file naming
 
 	geometry_2D* mSingleImmersedBody = nullptr; //An immersed object interacting with the fluid
+
+	double mDensityRho;
+	double mHorizontalChannelVelocity;
 
 };
 

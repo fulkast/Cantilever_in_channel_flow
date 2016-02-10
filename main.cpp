@@ -1,4 +1,3 @@
-
 #include "simulation.hpp"
 #ifdef USE_OPENGL_VISUALIZATION
 #include "visualization.hpp"
@@ -14,9 +13,14 @@ int main(int argc, char *argv[])
 	omp_set_num_threads(std::max(omp_get_max_threads(),omp_get_num_procs()));
 	const double D = 10; //Diameter of cylinder in cross flow
 
-	lb::simulation* sim = new lb::simulation(40*D,20*D,20,0.05); // nx, ny, Re, v_max
+	lb::simulation* sim = new lb::simulation(40*D,20*D,20,0.05,D); // nx, ny, Re, v_max, D
 	sim->initialize();
-
+	// sim->l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(100.5,100.5), 0, 20, 20));
+	// sim->l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(150.5, 150.5),0,15,15));
+	sim->l.add_to_shapes(new cylinder_2D(lb::coordinate<double>(10*D,10*D),0,D/2));
+	sim->l.print_shapes();
+	std::cout << "Initialized lattice..." << std::endl;
+	std::cout << *sim << std::endl;
 
 	// Some stuff to test functionalities
 	// sim->l.print_bounding_nodes();
@@ -25,17 +29,16 @@ int main(int argc, char *argv[])
 	// 		" is: " << sim->l.get_shortest_distance_to_true_boundary(lb::coordinate<int>(89,100)) << std::endl;
 
 
-
 #ifdef USE_OPENGL_VISUALIZATION
-	
-		lb::visualization::initialize(sim,argc,argv);
-		lb::visualization::get_instance().run();
+
+	lb::visualization::initialize(sim,argc,argv);
+	lb::visualization::get_instance().run();
 
 
 
-	#else
-	
-		// Here are some hints for getting aquainted with the lattice class
+#else
+
+	// Here are some hints for getting aquainted with the lattice class
 		// ================================================================
 		
 //		// how to print the lattice:
@@ -71,7 +74,7 @@ int main(int argc, char *argv[])
 		}
 
 //	std::cout<<sim->l << std::endl;
-	#endif
-	
+#endif
+
 	return 0;
 }
