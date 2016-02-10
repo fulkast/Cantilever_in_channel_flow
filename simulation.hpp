@@ -468,11 +468,33 @@ public:	// for interaction with immersed shape
 			double Pxxneq = -rho_tgt*lb::velocity_set().cs*lb::velocity_set().cs/(2*beta)*(dudx + dudx);
 			double Pyyneq = -rho_tgt*lb::velocity_set().cs*lb::velocity_set().cs/(2*beta)*(dvdy + dvdy);
 			double Pxyneq = -rho_tgt*lb::velocity_set().cs*lb::velocity_set().cs/(2*beta)*(dudy + dvdx);
+
+			double Pxx = Pxxeq + Pxxneq;
+			double Pyy = Pyyeq + Pyyneq;
+			double Pxy = Pxyeq + Pxyneq;
+
+
+			// Grad's Approximation 
+			for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++)
+			{
+				// THIS PART IS WRONG
+				// lb::coordinate<int> currentVelocity(lb::velocity_set().c[0][*mIt] , lb::velocity_set().c[1][*mIt]);
+
+				 // l.f[mIt][l.get_node(iIndex,jIndex)] = lb::velocity_set().W[mIt] * (rho_tgt +
+				 // rho_tgt*u_tgt.i*currentVelocity.i /(lb::velocity_set().cs *lb::velocity_set().cs) +
+				 // rho_tgt*u_tgt.j*currentVelocity.j /(lb::velocity_set().cs *lb::velocity_set().cs) +
+				 // (1/(2*lb::velocity_set().cs *lb::velocity_set().cs * lb::velocity_set().cs *lb::velocity_set().cs)) *
+				 // ((Pxx - rho_tgt*lb::velocity_set().cs *lb::velocity_set().cs)*(currentVelocity.i*currentVelocity.i - lb::velocity_set().cs *lb::velocity_set().cs) +
+				 // (Pyy -rho_tgt*lb::velocity_set().cs *lb::velocity_set().cs)*(currentVelocity.j*currentVelocity.j - lb::velocity_set().cs *lb::velocity_set().cs) +
+				 // 	2*(Pxy)*(currentVelocity.i*currentVelocity.j)));
+			}
+
+			
 		}
 
 
 
-		//l.f[missing_pop_index][node_index] = ...
+		
 	}
 
 
