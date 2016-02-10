@@ -108,12 +108,15 @@ public: // ctor
 	{			
 		// ADDRESS THIS PROBLEM --> same type? 
 		// Store populations for quench
-		// for (int j=0; j<=l.ny-1; j++)
-		// {
-		//  	std::vector<float_type> outlet3 =  l.f[3][l.index(l.nx-1,j)];
-		//  	std::vector<float_type> outlet6 =  l.f[6][l.index(l.nx-1,j)];
-		//  	std::vector<float_type> outlet7 =  l.f[7][l.index(l.nx-1,j)];
-		//  }
+		std::vector<float_type> outlet3(l.ny);
+		std::vector<float_type> outlet6(l.ny);
+		std::vector<float_type> outlet7(l.ny);
+		for (int j=0; j<=l.ny-1; j++)
+		{
+		 	outlet3[j] = l.f[3][l.index(l.nx-1,j)];
+		 	outlet6[j]=  l.f[6][l.index(l.nx-1,j)];
+		 	outlet7[j]=  l.f[7][l.index(l.nx-1,j)];
+		 }
 
 
 		// Advection with shift				
@@ -373,9 +376,6 @@ public: // members
 	const float_type visc;     ///< viscosity
 	const float_type beta;     ///< LB parameter beta
 	const double D;
-	std::vector<float_type> outlet3;
-	std::vector<float_type> outlet6;
-	std::vector<float_type> outlet7;
 	unsigned int time;         ///< simulation time
 	bool file_output;          ///< flag whether to write files
 	unsigned int output_freq;  ///< file output frequency
