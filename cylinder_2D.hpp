@@ -44,7 +44,7 @@ public:
 
     }
 
-    double get_projection_distance(lb::coordinate<int> boundary_node, int lb_velocity_index )
+    double get_ray_length_at_intersection(lb::coordinate<int> boundary_node, int lb_velocity_index)
     {
         int i = boundary_node.i - mCenterOfMass.i;
         int j = boundary_node.j - mCenterOfMass.j;
@@ -70,6 +70,12 @@ public:
         }
 
         return out_going_velocity_indices;
+    }
+
+    virtual lb::coordinate<double> get_velocity_at_intersection(lb::coordinate<int> boundary_node, int lb_velocity_index )
+    {
+
+
     }
 
 

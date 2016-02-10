@@ -113,7 +113,7 @@ public:
 
     }
 
-    double get_projection_distance(lb::coordinate<int> boundary_node, int lb_velocity_index )
+    double get_ray_length_at_intersection(lb::coordinate<int> boundary_node, int lb_velocity_index)
     {
         double squaredDistance = 0;
         Point boundaryNodePoint(boundary_node.i,boundary_node.j);
@@ -153,6 +153,13 @@ public:
     std::vector<int> find_missing_populations(lb::coordinate<int> position)
     {
         return mMissingPopulationIndexMap[make_pair(position.i,position.j)];
+    }
+
+    virtual lb::coordinate<double> get_velocity_at_intersection(lb::coordinate<int> boundary_node, int lb_velocity_index )
+    {
+
+
+
     }
 
 

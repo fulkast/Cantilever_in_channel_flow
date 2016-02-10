@@ -332,30 +332,34 @@ public: // walls
 	/*
 	 * Sets the given node as a wall node
 	 */
-	void set_is_wall_node(coordinate<int> a_node);
+	void set_is_wall_node(coordinate<int>& a_node);
 
 	/*
 	 * Unset the given node as a wall node
 	 */
-	void unset_is_wall_node(coordinate<int> a_node);
+	void unset_is_wall_node(coordinate<int>& a_node);
 	
 	/* Sets the given node as a refill node
 	 */
-	void set_is_refill_node(coordinate<int> a_node);
+	void set_is_refill_node(coordinate<int>& a_node);
 
 	/*
 	 * Unset the given node as a refill node
 	 */
-	void unset_is_refill_node(coordinate<int> a_node);
+	void unset_is_refill_node(coordinate<int>& a_node);
+
+	void set_u_target_at_node(coordinate<int>& a_node, double _u);
+
+	double get_u_target_at_node(coordinate<int>& a_node);
 
 	/* Sets the given node as a boundary node
 	 */
-	void set_is_boundary_node(coordinate<int> a_node);
+	void set_is_boundary_node(coordinate<int>& a_node);
 
 	/*
 	 * Unset the given node as a boundary node
 	 */
-	void unset_is_boundary_node(coordinate<int> a_node);
+	void unset_is_boundary_node(coordinate<int>& a_node);
 
 
 	/**
@@ -428,6 +432,9 @@ public: // members
 	std::map<std::pair<int,int>,
 			bool>
 			refill_nodes;
+	std::map<std::pair<int,int>,
+			double>
+			u_target_at_node;
 
 	property_array properties;                ///< properties datastructure (can hold many different properties per node)
 	const bool periodic_x;                    ///< flag whether to use periodicity in x direction
@@ -574,7 +581,7 @@ void lattice::add_wall(coordinate<int> min_coord, coordinate<int> max_coord)
 }
 
 
-void lattice::set_is_wall_node(coordinate<int> a_node)
+void lattice::set_is_wall_node(coordinate<int>& a_node)
 {
 	// check if node not yet labelled as wall
 	if (!get_node(a_node.i,a_node.j).has_flag_property("wall"))
@@ -585,7 +592,7 @@ void lattice::set_is_wall_node(coordinate<int> a_node)
 	}
 }
 
-void lattice::unset_is_wall_node(coordinate<int> a_node)
+void lattice::unset_is_wall_node(coordinate<int>& a_node)
 {
 	// check if is wall and then delete from walls
 	if (get_node(a_node.i,a_node.j).has_flag_property("wall"))
@@ -596,7 +603,7 @@ void lattice::unset_is_wall_node(coordinate<int> a_node)
 	}
 }
 
-void lattice::set_is_refill_node(coordinate<int> a_node)
+void lattice::set_is_refill_node(coordinate<int>& a_node)
 {
 	// check if node is not yet labelled as a refill node
 	if (!get_node(a_node.i,a_node.j).has_flag_property("refill"))
@@ -607,7 +614,18 @@ void lattice::set_is_refill_node(coordinate<int> a_node)
 	}
 }
 
-void lattice::unset_is_refill_node(coordinate<int> a_node)
+void lattice::set_u_target_at_node(coordinate<int>& a_node, double _u)
+{
+		// set the u_target at current node
+		u_target_at_node[std::make_pair(a_node.i,a_node.j)] = _u;
+}
+
+double lattice::get_u_target_at_node(coordinate<int>& a_node)
+{
+	return u_target_at_node[std::make_pair(a_node.i,a_node.j)];
+}
+
+void lattice::unset_is_refill_node(coordinate<int>& a_node)
 {
 	// check if node is refill node
 	if (get_node(a_node.i,a_node.j).has_flag_property("refill"))
@@ -618,7 +636,7 @@ void lattice::unset_is_refill_node(coordinate<int> a_node)
 	}
 }
 
-void lattice::set_is_boundary_node(coordinate<int> a_node)
+void lattice::set_is_boundary_node(coordinate<int>& a_node)
 {
 	// check if node not yet labelled as boundary
 	if (!get_node(a_node.i,a_node.j).has_flag_property("boundary"))
@@ -629,7 +647,7 @@ void lattice::set_is_boundary_node(coordinate<int> a_node)
 	}
 }
 
-void lattice::unset_is_boundary_node(coordinate<int> a_node)
+void lattice::unset_is_boundary_node(coordinate<int>& a_node)
 {
 	// check if node not yet labelled as wall
 	if (get_node(a_node.i,a_node.j).has_flag_property("boundary"))

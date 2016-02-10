@@ -324,25 +324,32 @@ public:	// for interaction with immersed shape
 
 	void fix_missing_populations()
 	{
-	/*	// boundary nodes iterator
+		// boundary nodes iterator
 		std::vector<lb::coordinate<int>> currentBoundary = mSingleImmersedBody->get_boundary_nodes();
 		for (auto it = currentBoundary.begin(); it != currentBoundary.end(); it++)
 		{
 
 			// lattice representation indices for current node
 			int iIndex = it->i; int jIndex = it->j;
+			lb::coordinate<int> currentCoordinate(iIndex,jIndex);
 
 			// current missing populations iterator
-			std::vector<int> currentMissingPopulations = mSingleImmersedBody->find_missing_populations(lb::coordinate<int>(iIndex,jIndex));
-			for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations; mIt++)
+			std::vector<int> currentMissingPopulations = mSingleImmersedBody->find_missing_populations(currentCoordinate);
+			l.set_u_target_at_node(currentCoordinate , 0.0);		// reset current u_target
+			double currentUTarget = 0.0;
+			for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++)
 			{
+				lb::coordinate<int> currentVelocity(lb::velocity_set().c[0][*mIt] , lb::velocity_set().c[1][*mIt]);		// get the velocity represented by the current missing population index
+				lb::node fluidNeighborNode = l.get_node(iIndex + currentVelocity.i , jIndex + currentVelocity.j); 		// get the fluid node to interpolate velocity from
+				lb::coordinate<double> adjacentFluidVelocity(fluidNeighborNode.u(),fluidNeighborNode.v());				// get its velocity
 
+//				currentUTarget += mSingleImmersedBody->
 
 
 			}
 		}
 
-*/
+
 		//l.f[missing_pop_index][node_index] = ...
 	}
 
