@@ -193,26 +193,6 @@ public: // ctor
 		// fix_missing_populations()
 
 
-
-		// for (auto i : l.boundary_nodes)
-		/*
-		 {
-		 	int current_x = i.first.first;
-		 	int current_y = i.first.second;
-		 	lb::coordinate<int> a_node(current_x,current_y);
-		 	vector<int> missing_populations =  shapes.get_missing_populations(a_node);
-
-		 	double utgt = 0;
-
-		 	for (auto j : missing_populations)
-		 	{
-				int qi = shapes.get_projection_distance(a_node,lb::velocity_set().reverse_velocity(j));
-				utqt += qi * l.f
-		 	}
-
-		 }
-		 */
-
 		#pragma omp parallel for
 		for (unsigned int i=0; i<l.wall_nodes.size(); ++i)
 		{
@@ -326,21 +306,26 @@ public:	// for interaction with immersed shape
 	{
 		// boundary nodes iterator
 		std::vector<lb::coordinate<int>> currentBoundary = mSingleImmersedBody->get_boundary_nodes();
+
+		// clear target rho and u
+		l.clear_rho_target_for_all_boundary_nodes();
+		l.clear_rho_target_for_all_boundary_nodes();
+
 		for (auto it = currentBoundary.begin(); it != currentBoundary.end(); it++)
 		{
-
 			// lattice representation indices for current node
 			int iIndex = it->i; int jIndex = it->j;
 			lb::coordinate<int> currentCoordinate(iIndex,jIndex);
 
 			// find missing populations at current node
 			std::vector<int> currentMissingPopulations = mSingleImmersedBody->find_missing_populations(currentCoordinate);
-			// reset the u_target to get ready for recalculation
-			l.set_u_target_at_node(currentCoordinate , lb::coordinate<double>(0.0,0.0));
 
 			//-- The following naming is in accordance with equation 14 from reference paper of Dorschner et al. -------//
 
 			lb::coordinate<double> u_tgt(0.0,0.0);
+			double rho_bb = 0;
+			double rho_s = 0;
+			std::vector<bool> rho_bb_has_added_index_i(lb::velocity_set().size,false);
 
 			// iterate through all missing populations at current node
 			for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++)
@@ -355,7 +340,28 @@ public:	// for interaction with immersed shape
 				u_tgt.i += (q_i * adjacentFluidVelocity.i + adjacentWallVelocity.i) / (1 + q_i);
 				u_tgt.j += (q_i * adjacentFluidVelocity.j + adjacentWallVelocity.j) / (1 + q_i);
 //				currentUTarget += mSingleImmersedBody->
+
+				// work on rho bb
+				// add the bounce back using the incoming to outgoing velocity swapper
+				rho_bb += l.get_node(iIndex,jIndex).f(lb::velocity_set().incoming_velocity_to_outgoing_velocity(*mIt));
+				rho_bb_has_added_index_i[*mIt] = true;			// set velocity has been added to rho_bb
+
+				// work on rho s
+				double ci_dot_u_wi = currentVelocity.i * adjacentWallVelocity.i + currentVelocity.j + adjacentWallVelocity.j;
+				rho_s += lb::velocity_set().W[*mIt]*ci_dot_u_wi;
 			}
+
+			rho_s *= 6*mDensityRho;
+			// add remaining densities to rho_bb
+			for (int remaining_indices = 0; remaining_indices < rho_bb_has_added_index_i.size(); remaining_indices++)
+			{
+				if (!rho_bb_has_added_index_i[remaining_indices])
+				{
+					rho_bb += l.get_node(iIndex,jIndex).f(remaining_indices);
+				}
+			}
+			// complete rho_tgt update
+			l.set_rho_target_at_node(currentCoordinate,rho_bb+rho_s);
 
 			u_tgt.i /= currentMissingPopulations.size(); u_tgt.j /= currentMissingPopulations.size();
 			l.set_u_target_at_node(currentCoordinate,u_tgt);

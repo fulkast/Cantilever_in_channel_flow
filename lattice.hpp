@@ -352,6 +352,14 @@ public: // walls
 
 	coordinate<double> get_u_target_at_node(coordinate<int>& a_node);
 
+	void clear_u_target_for_all_boundary_nodes();
+
+	void set_rho_target_at_node(coordinate<int>& a_node, double _rho);
+
+	double get_rho_target_at_node(coordinate<int>& a_node);
+
+	void clear_rho_target_for_all_boundary_nodes();
+
 	/* Sets the given node as a boundary node
 	 */
 	void set_is_boundary_node(coordinate<int>& a_node);
@@ -435,6 +443,9 @@ public: // members
 	std::map<std::pair<int,int>,
 			std::pair<double,double>>
 			u_target_at_node;
+	std::map<std::pair<int,int>,
+						double>
+			rho_target_at_node;
 
 	property_array properties;                ///< properties datastructure (can hold many different properties per node)
 	const bool periodic_x;                    ///< flag whether to use periodicity in x direction
@@ -624,6 +635,28 @@ coordinate<double> lattice::get_u_target_at_node(coordinate<int>& a_node)
 {
 	std::pair<double,double> velocity = u_target_at_node[std::make_pair(a_node.i,a_node.j)];
 	return lb::coordinate<double>(velocity.first,velocity.second);
+}
+
+
+void lattice::clear_u_target_for_all_boundary_nodes()
+{
+	u_target_at_node.clear();
+}
+
+void lattice::set_rho_target_at_node(coordinate<int>& a_node, double _rho)
+{
+	// set the u_target at current node
+	rho_target_at_node[std::make_pair(a_node.i,a_node.j)] = _rho;
+}
+
+double lattice::get_rho_target_at_node(coordinate<int>& a_node)
+{
+	return rho_target_at_node[std::make_pair(a_node.i,a_node.j)];
+}
+
+void lattice::clear_rho_target_for_all_boundary_nodes()
+{
+	rho_target_at_node.clear();
 }
 
 void lattice::unset_is_refill_node(coordinate<int>& a_node)

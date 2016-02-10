@@ -72,10 +72,9 @@ public:
         return out_going_velocity_indices;
     }
 
-    virtual lb::coordinate<double> get_velocity_at_intersection(lb::coordinate<int> boundary_node, int lb_velocity_index )
+    lb::coordinate<double> get_velocity_at_intersection(lb::coordinate<int> boundary_node, int lb_velocity_index )
     {
-
-
+        return lb::coordinate<double>(0.0,0.0);
     }
 
 
