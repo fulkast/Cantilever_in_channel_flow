@@ -14,6 +14,7 @@
 #include <sstream>
 #include "quadrilateral_2D.hpp"
 
+
 namespace lb {
 	
 /**
@@ -41,13 +42,13 @@ public: // ctor
 	  Re(_Re), 
 	  Vmax(_Vmax),
 	  D(_D),
-	  // visc(_Vmax*nx/_Re ), // visc = Vmax*D/Re
 	  visc(_Vmax*D/_Re),
 	  beta( 1/(2*visc/(velocity_set().cs*velocity_set().cs) + 1) ), 
 	  time(0),
 	  file_output(true), // set to true if you want to write files
 	  output_freq(100),
 	  output_index(0)
+
 	{ 
 		// define amount to shift populations for advection
 		for (unsigned int i=0; i<velocity_set().size; ++i)
@@ -84,15 +85,9 @@ public: // ctor
 		{
 			for (int i=-1; i<=static_cast<int>(l.nx); ++i)
 			{
-				if (i!=-1)
-				{
-					l.get_node(i,j).u()  = 0;
-				}
-				else
-				{
-					l.get_node(-1,j).u()  = Vmax;
-				}		
-
+				// double y = j - 0.5;
+				// double L_y = l.ny-2;
+				l.get_node(i,j).u()   =Vmax ;// 4* Vmax / (L_y*L_y) * (L_y*y - y*y); // poiseulle flow
 				l.get_node(i,j).v()   = 0;
 				l.get_node(i,j).rho() = 1;
 				lb::velocity_set().equilibrate(l.get_node(i,j));
@@ -100,22 +95,6 @@ public: // ctor
 
 
 		}
-
-
-		//  initialize nodes [test]
-		/*
-		for (int j=-1; j<=static_cast<int>(l.ny); ++j)
-		{
-			for (int i=-1; i<=static_cast<int>(l.nx); ++i)
-			{
-				l.get_node(i,j).u()   =  -((Vmax*Ky/std::sqrt(Kx*Kx+Ky*Ky))*std::sin(Ky*j)*std::cos(Kx*i));
-				l.get_node(i,j).v()   = ((Vmax*Ky/std::sqrt(Kx*Kx+Ky*Ky))*std::sin(Kx*i)*std::cos(Ky*j));
-				l.get_node(i,j).rho() = 1 - (Vmax/velocity_set().cs)*(Vmax/velocity_set().cs)/(2*K*K)*(Ky*Ky*std::cos(2*Kx*i)+Kx*Kx*std::cos(2*Ky*j));
-				lb::velocity_set().equilibrate(l.get_node(i,j));
-
-			}
-		}
-		*/
 
 
 	}
@@ -127,6 +106,16 @@ public: // ctor
 	 */
 	void advect()
 	{			
+		// ADDRESS THIS PROBLEM --> same type? 
+		// Store populations for quench
+		// for (int j=0; j<=l.ny-1; j++)
+		// {
+		//  	std::vector<float_type> outlet3 =  l.f[3][l.index(l.nx-1,j)];
+		//  	std::vector<float_type> outlet6 =  l.f[6][l.index(l.nx-1,j)];
+		//  	std::vector<float_type> outlet7 =  l.f[7][l.index(l.nx-1,j)];
+		//  }
+
+
 		// Advection with shift				
 			for (int k=0; k<velocity_set().size; k++)
 			{							
@@ -134,7 +123,6 @@ public: // ctor
 				{
 					for (int i = 0 ; i < l.real_size+shift[k]; i ++)
 					{
-						// if((i % l.real_nx == 0) && (k==1 || k==5 || k==8 )) continue;
 						l.f[k][i] = l.f[k][i-shift[k]];
 					}
 				}
@@ -142,55 +130,113 @@ public: // ctor
 				{
 					for (int i = l.real_size-1; i >= 0+shift[k]; i--)
 					{
-						// if((i % (l.real_nx-1) == 0) && (k==3 || k==6 || k==7)) continue;
 						l.f[k][i] = l.f[k][i-shift[k]];
 					}
 				}
 			}
-
-		//Flow boundary conditions
-			// INLET --> WEST WALL 
-			 // for (int j = -1; j <= l.ny; j++)
-			 // {
-			 // // 	l.get_node(-1,j).u()   = Vmax;
-				// // l.get_node(-1,j).v()   = 0;
-				// // l.get_node(-1,j).rho() = 1;
-				// // lb::velocity_set().equilibrate(l.get_node(-1,j));
-				// l.f[1][l.index(0,j)] = l.f[1][l.index(-1,j)];
-				// l.f[5][l.index(0,j)] = l.f[5][l.index(-1,j)];
-				// l.f[8][l.index(0,j)] = l.f[8][l.index(-1,j)];
-
-
-			 // }
-
-
-			// OUTLET --> EAST WALL  'quench' populations --> equilibrate?
-
-			// for (int j = -1; j <= l.ny; j++)
-			// {
-			// 	// l.get_node(l.nx,j).rho() = l.get_node(l.nx-1,j).rho();
-			// 	 l.f[3][l.index(l.nx,j)] = l.f[3][l.index(l.nx-1,j)];	//moving West
-			// 	 l.f[6][l.index(l.nx,j)] = l.f[6][l.index(l.nx-1,j)];	// moving NW
-			// 	 l.f[7][l.index(l.nx,j)] = l.f[7][l.index(l.nx-1,j)];	// moving SW
-			// }
-	
-
-			// // no slip top and bottom
-			// South wall
+			
+			// Periodic boundaries 
+			// West wall --> East moving particles 
+			for (int j = 0; j <= l.ny-1; j++)
+			{
+			 l.f[1][l.index(0,j)-shift[1]] = l.f[1][l.index(l.nx,j)];	//moving east
+			 l.f[5][l.index(0,j)-shift[5]] = l.f[5][l.index(l.nx,j)];	// moving NE
+			 l.f[8][l.index(0,j)-shift[8]] = l.f[8][l.index(l.nx,j)];	// moving SE
+			}
+			
+			// East wall --> West moving particles 
+			for (int j = 0; j <= l.ny-1; j++)
+			{
+			 l.f[3][l.index(l.nx-1,j)-shift[3]] = l.f[3][l.index(-1,j)];	//moving West
+			 l.f[6][l.index(l.nx-1,j)-shift[6]] = l.f[6][l.index(-1,j)];	// moving NW
+			 l.f[7][l.index(l.nx-1,j)-shift[7]] = l.f[7][l.index(-1,j)];	// moving SW
+			}
+			
+			// South Wall --> North moving particles
 			for (int i = 0; i <= l.nx-1; ++i)
 			{
-				l.f[2][l.index(i,0)-shift[2]] = l.f[4][l.index(i,-1)]; // moving north
-				l.f[5][l.index(i,0)-shift[5]] = l.f[8][l.index(i,-1)]; // moving NE
-				l.f[6][l.index(i,0)-shift[6]] = l.f[7][l.index(i,-1)]; // moving NW
+			 l.f[2][l.index(i,0)-shift[2]] = l.f[2][l.index(i,l.ny)]; // moving north
+			 l.f[5][l.index(i,0)-shift[5]] = l.f[5][l.index(i,l.ny)]; // moving NE
+			 l.f[6][l.index(i,0)-shift[6]] = l.f[6][l.index(i,l.ny)]; // moving NW
 			}
-
-			// North Wall
-			for (int i = l.nx-1; i >=0 ; --i)
+			
+			// North Wall --> South moving particles
+			for (int i = 0; i <= l.nx-1; ++i)
 			{
-				l.f[4][l.index(i,l.ny-1)-shift[4]] = l.f[2][l.index(i,l.ny)]; // moving south
-				l.f[8][l.index(i,l.ny-1)-shift[8]] = l.f[5][l.index(i,l.ny)]; // moving SW
-				l.f[7][l.index(i,l.ny-1)-shift[7]] = l.f[6][l.index(i,l.ny)]; // moving SE
+			 l.f[4][l.index(i,l.ny-1)-shift[4]] = l.f[4][l.index(i,-1)]; // moving south
+			 l.f[7][l.index(i,l.ny-1)-shift[7]] = l.f[7][l.index(i,-1)]; // moving SW
+			 l.f[8][l.index(i,l.ny-1)-shift[8]] = l.f[8][l.index(i,-1)]; // moving SE
 			}
+		
+			// Buffer CORNERS
+			l.f[5][l.index(0,0)-shift[5]] = l.f[5][l.index(l.nx,l.ny)] ; // sw corner
+			l.f[6][l.index(l.nx-1,0)-shift[6]] = l.f[6][l.index(-1,l.ny)] ; // se corner
+			l.f[7][l.index(l.nx-1,l.ny-1)-shift[7]] = l.f[7][l.index(-1,-1)] ; // ne corner
+			l.f[8][l.index(0,l.ny-1)-shift[8]] = l.f[8][l.index(l.nx,-1)] ; // NW corner
+
+		
+			// INLET & OUT BC
+			 for (int j = 0; j <= l.ny-1; j++)
+			 {
+				// double y = j - 0.5;
+				// double L_y = l.ny-2;
+
+				double u_inlet = Vmax ; //Uniform flow //4* Vmax / (L_y*L_y) * (L_y*y - y*y);
+				double v_inlet = 0;
+				double rho_inlet =  1;
+								
+				//inlet		
+					l.get_node(-1,j).u()   = u_inlet; 
+					l.get_node(-1,j).v()   = v_inlet;
+				 	l.get_node(-1,j).rho() = rho_inlet;
+				 	lb::velocity_set().equilibrate(l.get_node(-1,j));
+
+				//outlet (quench)
+				// 'refill ghost boundary nodes (right wall) with previous time step' 	
+				 	// l.f[3][l.index(l.nx-1,j)] = outlet3;
+				 	// l.f[6][l.index(l.nx-1,j)] = outlet6;
+				 	// l.f[7][l.index(l.nx-1,j)] = outlet7;
+
+				// // Zou-he Inlet (Microscopic BC)
+				// 	l.f[1][l.index(-1,j)] = l.f[3][l.index(-1,j)]+2/3*rho_inlet*u_inlet;
+				// 	l.f[5][l.index(-1,j)] = l.f[7][l.index(-1,j)] +	0.5*(l.f[4][l.index(-1,j)]-l.f[2][l.index(-1,j)]) +\
+				// 							0.5*rho_inlet*v_inlet +1/6*rho_inlet*u_inlet ;
+				// 	l.f[8][l.index(-1,j)] = l.f[6][l.index(-1,j)] - 0.5*(l.f[4][l.index(-1,j)] - l.f[2][l.index(-1,j)]) -\
+				// 							0.5*rho_inlet*v_inlet + 1/6 * rho_inlet*u_inlet ;
+				// //outlet					
+				// 	double v_outlet = 0;
+				// 	double rho_outlet = 1;
+				// 	double u_outlet =  -1.0 + (l.f[0][l.index(l.nx,j)] + l.f[2][l.index(l.nx,j)]+l.f[4][l.index(l.nx,j)] +\
+				// 	 2.0*(l.f[1][l.index(l.nx,j)]+l.f[5][l.index(l.nx,j)]+l.f[8][l.index(l.nx,j)]))/rho_outlet ;
+
+				// // Zou-he Outlet (Microscopic Oulet BC)
+				// 	l.f[3][l.index(l.nx,j)] = l.f[1][l.index(l.nx,j)]-2/3*rho_outlet*u_outlet ;	
+				// 	l.f[7][l.index(l.nx,j)] = l.f[5][l.index(l.nx,j)]-0.5*(l.f[4][l.index(l.nx,j)]-l.f[2][l.index(l.nx,j)])-\
+				// 							0.5*rho_outlet*v_outlet-rho_outlet*u_outlet/6 ;		
+				// 	l.f[6][l.index(l.nx,j)] = l.f[8][l.index(l.nx,j)]+0.5*(l.f[4][l.index(l.nx,j)]-l.f[2][l.index(l.nx,j)])+\
+				// 							0.5*rho_outlet*v_outlet-rho_outlet*u_outlet/6 ;	
+													
+			 }
+
+
+
+			// (no slip) top and bottom 
+			 // include corners??
+			// South wall
+			// 	for (int i = 0; i <= l.nx-1; ++i)
+			// 	{
+			// 		l.f[2][l.index(i,0)-shift[2]] = l.f[4][l.index(i,-1)]; // moving north
+			// 		l.f[5][l.index(i,0)-shift[5]] = l.f[8][l.index(i,-1)]; // moving NE
+			// 		l.f[6][l.index(i,0)-shift[6]] = l.f[7][l.index(i,-1)]; // moving NW
+			// 	}
+
+			// // North Wall
+			// 	for (int i = l.nx-1; i >=0 ; --i)
+			// 	{
+			// 		l.f[4][l.index(i,l.ny-1)-shift[4]] = l.f[2][l.index(i,l.ny)]; // moving south
+			// 		l.f[8][l.index(i,l.ny-1)-shift[8]] = l.f[5][l.index(i,l.ny)]; // moving SW
+			// 		l.f[7][l.index(i,l.ny-1)-shift[7]] = l.f[6][l.index(i,l.ny)]; // moving SE
+			// 	}
 
 		
 	}
@@ -198,15 +244,6 @@ public: // ctor
 	/**  @brief apply wall boundary conditions */
 	void wall_bc()
 	{
-
-		//  test boundary rotation
-		for (int j=-1; j<=static_cast<int>(l.ny); ++j)
-		{
-			for (int i=-1; i<=static_cast<int>(l.nx); ++i)
-			{
-				l.get_node(i,j).rho() = 2;
-			}
-		}
 
 		for (auto i = l.shapes.begin(); i != l.shapes.end(); i++)
 		{
@@ -267,7 +304,7 @@ public: // ctor
 				
 				l.get_node(i,j).u() /= l.get_node(i,j).rho() ;
 				l.get_node(i,j).v() /= l.get_node(i,j).rho() ;
-				
+
 				// Collision step 
 				lb::float_type feqLocal[9];
 				velocity_set().f_eq(feqLocal,l.get_node(i,j).rho(),l.get_node(i,j).u(),l.get_node(i,j).v());			
@@ -336,6 +373,9 @@ public: // members
 	const float_type visc;     ///< viscosity
 	const float_type beta;     ///< LB parameter beta
 	const double D;
+	std::vector<float_type> outlet3;
+	std::vector<float_type> outlet6;
+	std::vector<float_type> outlet7;
 	unsigned int time;         ///< simulation time
 	bool file_output;          ///< flag whether to write files
 	unsigned int output_freq;  ///< file output frequency
