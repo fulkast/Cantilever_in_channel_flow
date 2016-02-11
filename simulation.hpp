@@ -439,7 +439,8 @@ public:	// for interaction with immersed shape
 	{
 		// boundary nodes iterator
 		// std::vector<lb::coordinate<int>> currentBoundary = mSingleImmersedBody->get_boundary_nodes();
-		auto mSingleImmersedBody = *l.shapes.begin(); 
+		
+		auto mSingleImmersedBody = *l.shapes.begin(); // More general
 		auto currentBoundary = mSingleImmersedBody->get_boundary_nodes();
 
 		// get_boundary_nodes();
@@ -449,7 +450,7 @@ public:	// for interaction with immersed shape
 
 		for (auto it = currentBoundary.begin(); it != currentBoundary.end(); it++)
 		{
-			// lattice representation indices for current node
+			//lattice representation indices for current node
 			int iIndex = it->i; int jIndex = it->j;
 			lb::coordinate<int> currentCoordinate(iIndex,jIndex);
 			// auto test = mSingleImmersedBody->find_missing_populations(currentCoordinate);
@@ -458,109 +459,109 @@ public:	// for interaction with immersed shape
 			std::vector<int> currentMissingPopulations = mSingleImmersedBody->find_missing_populations(currentCoordinate);
 			
 			// Bounce-back test (simple implementation)
-			// for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++)
-			// {
-			// 	l.get_node(iIndex,jIndex).f(*mIt) = l.get_node(iIndex,jIndex).f(lb::velocity_set().incoming_velocity_to_outgoing_velocity(*mIt));
-			// }	
+			for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++)
+			{
+				l.get_node(iIndex,jIndex).f(*mIt) = l.get_node(iIndex,jIndex).f(lb::velocity_set().incoming_velocity_to_outgoing_velocity(*mIt));
+			}	
 			
 	
 
 			//-- The following naming is in accordance with equation 14 from reference paper of Dorschner et al. -------//
 
-			lb::coordinate<double> u_tgt(0.0,0.0);
-			double rho_bb = 0;
-			double rho_s = 0;
-			std::vector<bool> rho_bb_has_added_index_i(lb::velocity_set().size,false);
+// 			lb::coordinate<double> u_tgt(0.0,0.0);
+// 			double rho_bb = 0;
+// 			double rho_s = 0;
+// 			std::vector<bool> rho_bb_has_added_index_i(lb::velocity_set().size,false);
 
-			lb::node current_node= l.get_node(iIndex,jIndex);
-			double dvdy = 0;
-			double dvdx = 0;
-			double dudx = 0;
-			double dudy = 0;
+// 			lb::node current_node= l.get_node(iIndex,jIndex);
+// 			double dvdy = 0;
+// 			double dvdx = 0;
+// 			double dudx = 0;
+// 			double dudy = 0;
 
-			// iterate through all missing populations at current node
-			for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++)
-			{
+// 			// iterate through all missing populations at current node
+// 			for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++)
+// 			{
 				
 
-				lb::coordinate<int> currentVelocity(lb::velocity_set().c[0][*mIt] , lb::velocity_set().c[1][*mIt]);		// get the velocity represented by the current missing population index
-				lb::node fluidNeighborNode = l.get_node(iIndex + currentVelocity.i , jIndex + currentVelocity.j); 		// get the fluid node to interpolate velocity from
-				lb::coordinate<double> adjacentFluidVelocity(fluidNeighborNode.u(),fluidNeighborNode.v());				// get its velocity
+// 				lb::coordinate<int> currentVelocity(lb::velocity_set().c[0][*mIt] , lb::velocity_set().c[1][*mIt]);		// get the velocity represented by the current missing population index
+// 				lb::node fluidNeighborNode = l.get_node(iIndex + currentVelocity.i , jIndex + currentVelocity.j); 		// get the fluid node to interpolate velocity from
+// 				lb::coordinate<double> adjacentFluidVelocity(fluidNeighborNode.u(),fluidNeighborNode.v());				// get its velocity
 
-				double q_i =  mSingleImmersedBody->get_ray_length_at_intersection(currentCoordinate,*mIt)/lb::velocity_set().magnitude_c[*mIt];
-				lb::coordinate<double> adjacentWallVelocity = mSingleImmersedBody->get_velocity_at_intersection(currentCoordinate,*mIt);
+// 				double q_i =  mSingleImmersedBody->get_ray_length_at_intersection(currentCoordinate,*mIt)/lb::velocity_set().magnitude_c[*mIt];
+// 				lb::coordinate<double> adjacentWallVelocity = mSingleImmersedBody->get_velocity_at_intersection(currentCoordinate,*mIt);
 
-				u_tgt.i += (q_i * adjacentFluidVelocity.i + adjacentWallVelocity.i) / (1 + q_i);
-				u_tgt.j += (q_i * adjacentFluidVelocity.j + adjacentWallVelocity.j) / (1 + q_i);
-//				currentUTarget += mSingleImmersedBody->
+// 				u_tgt.i += (q_i * adjacentFluidVelocity.i + adjacentWallVelocity.i) / (1 + q_i);
+// 				u_tgt.j += (q_i * adjacentFluidVelocity.j + adjacentWallVelocity.j) / (1 + q_i);
+// //				currentUTarget += mSingleImmersedBody->
 
-				// work on rho bb
-				// add the bounce back using the incoming to outgoing velocity swapper
-				rho_bb += l.get_node(iIndex,jIndex).f(lb::velocity_set().incoming_velocity_to_outgoing_velocity(*mIt));
-				rho_bb_has_added_index_i[*mIt] = true;			// set velocity has been added to rho_bb
+// 				// work on rho bb
+// 				// add the bounce back using the incoming to outgoing velocity swapper
+// 				rho_bb += l.get_node(iIndex,jIndex).f(lb::velocity_set().incoming_velocity_to_outgoing_velocity(*mIt));
+// 				rho_bb_has_added_index_i[*mIt] = true;			// set velocity has been added to rho_bb
 
-				// work on rho s
-				double ci_dot_u_wi = currentVelocity.i * adjacentWallVelocity.i + currentVelocity.j + adjacentWallVelocity.j;
-				rho_s += lb::velocity_set().W[*mIt]*ci_dot_u_wi;
+// 				// work on rho s
+// 				double ci_dot_u_wi = currentVelocity.i * adjacentWallVelocity.i + currentVelocity.j + adjacentWallVelocity.j;
+// 				rho_s += lb::velocity_set().W[*mIt]*ci_dot_u_wi;
 
-				//velocity gradient
-				if (currentVelocity.i == 0)
-				{
-					dvdy = currentVelocity.j * (adjacentFluidVelocity.j - current_node.v());
-					dudy = currentVelocity.j * (adjacentFluidVelocity.i - current_node.u());
-				}
-				else if (currentVelocity.j == 0)
-				{
-					dudx = currentVelocity.i * (adjacentFluidVelocity.i - current_node.u());// velocity comp. 'i', derived in 'i' direction
-					dvdx = currentVelocity.i * (adjacentFluidVelocity.j - current_node.v());
-				}
+// 				//velocity gradient
+// 				if (currentVelocity.i == 0)
+// 				{
+// 					dvdy = currentVelocity.j * (adjacentFluidVelocity.j - current_node.v());
+// 					dudy = currentVelocity.j * (adjacentFluidVelocity.i - current_node.u());
+// 				}
+// 				else if (currentVelocity.j == 0)
+// 				{
+// 					dudx = currentVelocity.i * (adjacentFluidVelocity.i - current_node.u());// velocity comp. 'i', derived in 'i' direction
+// 					dvdx = currentVelocity.i * (adjacentFluidVelocity.j - current_node.v());
+// 				}
 					
 
-			}
+// 			}
 
-			rho_s *= 6*mDensityRho;
-			// add remaining densities to rho_bb
-			for (int remaining_indices = 0; remaining_indices < rho_bb_has_added_index_i.size(); remaining_indices++)
-			{
-				if (!rho_bb_has_added_index_i[remaining_indices])
-				{
-					rho_bb += l.get_node(iIndex,jIndex).f(remaining_indices);
-				}
-			}
-			// complete rho_tgt update
-			double rho_tgt = rho_bb+rho_s ;
-			l.set_rho_target_at_node(currentCoordinate,rho_tgt);
+// 			rho_s *= 6*mDensityRho;
+// 			// add remaining densities to rho_bb
+// 			for (int remaining_indices = 0; remaining_indices < rho_bb_has_added_index_i.size(); remaining_indices++)
+// 			{
+// 				if (!rho_bb_has_added_index_i[remaining_indices])
+// 				{
+// 					rho_bb += l.get_node(iIndex,jIndex).f(remaining_indices);
+// 				}
+// 			}
+// 			// complete rho_tgt update
+// 			double rho_tgt = rho_bb+rho_s ;
+// 			l.set_rho_target_at_node(currentCoordinate,rho_tgt);
 
-			u_tgt.i /= currentMissingPopulations.size(); u_tgt.j /= currentMissingPopulations.size();
-			l.set_u_target_at_node(currentCoordinate,u_tgt);
+// 			u_tgt.i /= currentMissingPopulations.size(); u_tgt.j /= currentMissingPopulations.size();
+// 			l.set_u_target_at_node(currentCoordinate,u_tgt);
 
-			// Pressure tensor
-			double Pxxeq = rho_tgt*lb::velocity_set().cs + rho_tgt * u_tgt.i * u_tgt.i ;
-			double Pyyeq = rho_tgt*lb::velocity_set().cs + rho_tgt * u_tgt.j * u_tgt.j ;
-			double Pxyeq = rho_tgt * u_tgt.i * u_tgt.j ; // also --> Pyxeq 
+// 			// Pressure tensor
+// 			double Pxxeq = rho_tgt*lb::velocity_set().cs + rho_tgt * u_tgt.i * u_tgt.i ;
+// 			double Pyyeq = rho_tgt*lb::velocity_set().cs + rho_tgt * u_tgt.j * u_tgt.j ;
+// 			double Pxyeq = rho_tgt * u_tgt.i * u_tgt.j ; // also --> Pyxeq 
 
-			double Pxxneq = -rho_tgt*lb::velocity_set().cs*lb::velocity_set().cs/(2*beta)*(dudx + dudx);
-			double Pyyneq = -rho_tgt*lb::velocity_set().cs*lb::velocity_set().cs/(2*beta)*(dvdy + dvdy);
-			double Pxyneq = -rho_tgt*lb::velocity_set().cs*lb::velocity_set().cs/(2*beta)*(dudy + dvdx);
+// 			double Pxxneq = -rho_tgt*lb::velocity_set().cs*lb::velocity_set().cs/(2*beta)*(dudx + dudx);
+// 			double Pyyneq = -rho_tgt*lb::velocity_set().cs*lb::velocity_set().cs/(2*beta)*(dvdy + dvdy);
+// 			double Pxyneq = -rho_tgt*lb::velocity_set().cs*lb::velocity_set().cs/(2*beta)*(dudy + dvdx);
 
-			double Pxx = Pxxeq + Pxxneq;
-			double Pyy = Pyyeq + Pyyneq;
-			double Pxy = Pxyeq + Pxyneq;
+// 			double Pxx = Pxxeq + Pxxneq;
+// 			double Pyy = Pyyeq + Pyyneq;
+// 			double Pxy = Pxyeq + Pxyneq;
 
 
-			// Grad's Approximation 
-			for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++)
-			{
-				lb::coordinate<int> currentVelocity(lb::velocity_set().c[0][*mIt] , lb::velocity_set().c[1][*mIt]);
+// 			// Grad's Approximation 
+// 			for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++)
+// 			{
+// 				lb::coordinate<int> currentVelocity(lb::velocity_set().c[0][*mIt] , lb::velocity_set().c[1][*mIt]);
 
-				l.f[*mIt][l.index(iIndex,jIndex)] =  lb::velocity_set().W[*mIt] * (rho_tgt +
-				 rho_tgt*u_tgt.i*currentVelocity.i /(lb::velocity_set().cs *lb::velocity_set().cs) +
-				 rho_tgt*u_tgt.j*currentVelocity.j /(lb::velocity_set().cs *lb::velocity_set().cs) +
-				 (1/(2*lb::velocity_set().cs *lb::velocity_set().cs * lb::velocity_set().cs *lb::velocity_set().cs)) *
-				 ((Pxx - rho_tgt*lb::velocity_set().cs *lb::velocity_set().cs)*(currentVelocity.i*currentVelocity.i - lb::velocity_set().cs *lb::velocity_set().cs) +
-				 (Pyy -rho_tgt*lb::velocity_set().cs *lb::velocity_set().cs)*(currentVelocity.j*currentVelocity.j - lb::velocity_set().cs *lb::velocity_set().cs) +
-				 2*(Pxy)*(currentVelocity.i*currentVelocity.j)));
-			}
+// 				l.f[*mIt][l.index(iIndex,jIndex)] =  lb::velocity_set().W[*mIt] * (rho_tgt +
+// 				 rho_tgt*u_tgt.i*currentVelocity.i /(lb::velocity_set().cs *lb::velocity_set().cs) +
+// 				 rho_tgt*u_tgt.j*currentVelocity.j /(lb::velocity_set().cs *lb::velocity_set().cs) +
+// 				 (1/(2*lb::velocity_set().cs *lb::velocity_set().cs * lb::velocity_set().cs *lb::velocity_set().cs)) *
+// 				 ((Pxx - rho_tgt*lb::velocity_set().cs *lb::velocity_set().cs)*(currentVelocity.i*currentVelocity.i - lb::velocity_set().cs *lb::velocity_set().cs) +
+// 				 (Pyy -rho_tgt*lb::velocity_set().cs *lb::velocity_set().cs)*(currentVelocity.j*currentVelocity.j - lb::velocity_set().cs *lb::velocity_set().cs) +
+// 				 2*(Pxy)*(currentVelocity.i*currentVelocity.j)));
+// 			}
 
 		
 		}
