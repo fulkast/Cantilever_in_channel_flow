@@ -18,13 +18,13 @@ public:
     cylinder_2D(lb::coordinate<double> centerOfMass, double orientation, double radius) :
             geometry_2D(centerOfMass,orientation), mRadius(radius) {
 
-        mCircle = new Circle(Point(mCenterOfMass.i,mCenterOfMass.j), mRadius);
+        mCircle = new Circle(Point(mCenterOfMass.i,mCenterOfMass.j), mRadius*mRadius);
         update_shape();
     }
 
     void update_shape()
     {
-        *mCircle = Circle(Point(mCenterOfMass.i,mCenterOfMass.j), mRadius);
+        *mCircle = Circle(Point(mCenterOfMass.i,mCenterOfMass.j), mRadius*mRadius);
         update_boundary_and_internal_nodes();
     }
 
@@ -52,8 +52,8 @@ public:
                 Point query_point(i,j);
 
                 // check if point is within the shape or right on the boundary
-                if(mCircle->bounded_side(query_point) == CGAL::ON_BOUNDED_SIDE ||
-                   mCircle->bounded_side(query_point) == CGAL::ON_BOUNDARY)
+                if(!mCircle->has_on_unbounded_side(query_point) ||
+                        mCircle->has_on_boundary(query_point))
                 {
                     mInternalNodes.push_back(lb::coordinate<int>(i,j));
                     continue;
@@ -67,8 +67,8 @@ public:
                 {
                     query_point = Point(i+lb::velocity_set().c[0][velocity_index],j+lb::velocity_set().c[1][velocity_index]);
 
-                    if(mCircle->bounded_side(query_point) == CGAL::ON_BOUNDED_SIDE ||
-                       mCircle->bounded_side(query_point) == CGAL::ON_BOUNDARY)
+                    if(!mCircle->has_on_unbounded_side(query_point) ||
+                       mCircle->has_on_boundary(query_point))
                     {
                         // reflect the velocity index to get the corresponding outgoing velocity at the node
                         // and add it to the outgoing velocity indices of the current (boundary) node
@@ -96,6 +96,7 @@ public:
     {
         double squaredDistance = 0;
 
+
         // flip directions to get the ray opposite of the missing population index's ray
         lb_velocity_index = lb::velocity_set().incoming_velocity_to_outgoing_velocity(lb_velocity_index);
 
@@ -104,18 +105,55 @@ public:
                                 Circle_K_Point(boundary_node.i+lb::velocity_set().c[0][lb_velocity_index],
                                     boundary_node.j+lb::velocity_set().c[1][lb_velocity_index]));
 
-        std::ostream_iterator<CGAL::Object> out_it (std::cout,", ");
+        double t = 0;
 
-//        out_it = CGAL::intersection(projectingRay,mCircle);
+        double Cx,Cy,Cz,Dx,Dy,Dz,Ox,Oy,Oz;
+
+        Cx = mCenterOfMass.i;Cy = mCenterOfMass.j;
+        Dx=lb::velocity_set().c[0][lb_velocity_index],
+        Dy=lb::velocity_set().c[1][lb_velocity_index],
+                Ox=boundary_node.i,
+                Oy=boundary_node.j;
+        Dx /= lb::velocity_set().magnitude_c[lb_velocity_index];
+        Dy /= lb::velocity_set().magnitude_c[lb_velocity_index];
+
+        double b = -(2*((Dx*(Cx-Ox)) + (Dy*(Cy-Oy)) ));
+        double c = ((Cx-Ox)*(Cx-Ox) + (Cy-Oy)*(Cy-Oy) - mRadius*mRadius);
+        double a = (Dx*Dx + Dy*Dy);
+
+        float discriminant = b*b-4*a*c;
+
+        if (discriminant<0)
+            std::cout << "In within boundary at " << __func__ << std::endl;
+
+        if (discriminant==0) {
+            double a_ =2*a;
+            t = -b/a_;
+            return t;
+        }
+
+        t = (-b + std::sqrt(discriminant));
+        double t_conjugate = (-b - std::sqrt(discriminant));
+        if (t < 0) {
+            t = t_conjugate;
+            if (t < 0)
+                return false;
+        }
+        double a_ =2*a;
+
+        if (t_conjugate<t)
+        {
+            t = t_conjugate/a_;
+            return t;
+        }
+        else
+        {
+            t/=a_;
+            t = t_conjugate/a_;
+                return t;
+        }
 
 
-
-
-
-        int i = boundary_node.i - mCenterOfMass.i;
-        int j = boundary_node.j - mCenterOfMass.j;
-
-        return sqrt(i*i + j*j) - mRadius;
     }
 
     std::vector<int> find_missing_populations(lb::coordinate<int> position)

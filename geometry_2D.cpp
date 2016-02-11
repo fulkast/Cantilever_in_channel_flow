@@ -1,6 +1,8 @@
 #include "geometry_2D.hpp"
 
 
+
+
 geometry_2D::geometry_2D(){}
 
 geometry_2D::geometry_2D(lb::coordinate<double> centerOfMass, double orientation) : mCenterOfMass(centerOfMass.i,centerOfMass.j)

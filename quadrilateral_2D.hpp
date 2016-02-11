@@ -1,19 +1,4 @@
 #include "geometry_2D.hpp"
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Aff_transformation_2.h>
-#include <CGAL/Cartesian.h>
-#include <CGAL/Vector_2.h>
-#include <CGAL/Polygon_2.h>
-#include <CGAL/Bbox_2.h>
-#include <CGAL/Segment_2.h>
-
-
-typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-typedef K::Point_2 Point;
-typedef CGAL::Polygon_2<K> Polygon_2;
-typedef CGAL::Aff_transformation_2<K> Transformation;
-typedef CGAL::Vector_2<K> Vector;
-typedef CGAL::Segment_2<K> Segment;
 
 using namespace std;
 

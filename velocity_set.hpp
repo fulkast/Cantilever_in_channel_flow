@@ -64,13 +64,13 @@ public:
 				case 4:
 					return 2;
 				case 5:
-					return 8;
-				case 6:
 					return 7;
+				case 6:
+					return 8;
 				case 7:
-					return 6;
-				case 8:
 					return 5;
+				case 8:
+					return 6;
 				default:
 				std::cerr << "Invalid velocity switching index called... " << std::endl;
 			}

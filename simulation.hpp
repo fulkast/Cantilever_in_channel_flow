@@ -103,8 +103,8 @@ public: // ctor
 		/* *************
 		* Add shapes 
 		******************* */
-		// l.add_to_shapes(new cylinder_2D(lb::coordinate<double>(10*D,10*D),0,D/2));
-		l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(10*D,10*D), 0, D, D));
+		 l.add_to_shapes(new cylinder_2D(lb::coordinate<double>(10*D,10*D),0,D/2));
+//		l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(10*D,10*D), 0, D, D));
 		
 
 		fix_missing_populations();
@@ -443,6 +443,8 @@ public:	// for interaction with immersed shape
 		auto mSingleImmersedBody = *l.shapes.begin(); // More general
 		auto currentBoundary = mSingleImmersedBody->get_boundary_nodes();
 
+		mSingleImmersedBody->print_boundary_nodes();
+
 		// get_boundary_nodes();
 		// // clear target rho and u
 		l.clear_rho_target_for_all_boundary_nodes();
@@ -462,7 +464,9 @@ public:	// for interaction with immersed shape
 			for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++)
 			{
 				l.get_node(iIndex,jIndex).f(*mIt) = l.get_node(iIndex,jIndex).f(lb::velocity_set().incoming_velocity_to_outgoing_velocity(*mIt));
-			}	
+				 std::cout << "At node :" << currentCoordinate << " velocity " << *mIt << " distance to boundary: " <<
+						 mSingleImmersedBody->get_ray_length_at_intersection(currentCoordinate,*mIt) << std::endl;
+			}
 			
 	
 
