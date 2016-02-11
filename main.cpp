@@ -18,9 +18,9 @@ int main(int argc, char *argv[])
 	// sim->l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(20*D,10*D), 0, 20, 20));
 	// sim->l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(150.5, 150.5),0,15,15));
 	// sim->l.add_to_shapes(new cylinder_2D(lb::coordinate<double>(10*D,10*D),0,D/2));
-	sim->l.print_shapes();
-	std::cout << "Initialized lattice..." << std::endl;
-	std::cout << *sim << std::endl;
+	// sim->l.print_shapes();
+	// std::cout << "Initialized lattice..." << std::endl;
+	// std::cout << *sim << std::endl;
 
 	// Some stuff to test functionalities
 	// sim->l.print_bounding_nodes();

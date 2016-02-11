@@ -100,13 +100,15 @@ public: // ctor
 
 		}
 
-		// Add shapes
-		l.add_to_shapes(new cylinder_2D(lb::coordinate<double>(10*D,10*D),0,D/2));
-		l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(20*D,10*D), 0, 20, 20));
-
-
-		// Initialize missing populations
+		/* *************
+		* Add shapes 
+		******************* */
+		// l.add_to_shapes(new cylinder_2D(lb::coordinate<double>(10*D,10*D),0,D/2));
+		l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(10*D,10*D), 0, D, D));
 		
+
+		fix_missing_populations();
+
 	}
 	
 	/** 
@@ -116,7 +118,7 @@ public: // ctor
 	 */
 	void advect()
 	{			
-		// ADDRESS THIS PROBLEM --> same type? 
+
 		// Store populations for quench
 		std::vector<float_type> outlet3(l.ny);
 		std::vector<float_type> outlet6(l.ny);
@@ -181,7 +183,7 @@ public: // ctor
 				// double y = j - 0.5;
 				// double L_y = l.ny-2;
 
-				double u_inlet = Vmax ; //Uniform flow //4* Vmax / (L_y*L_y) * (L_y*y - y*y);
+				double u_inlet = Vmax ; //Uniform flow 
 				double v_inlet = 0;
 				double rho_inlet =  1;
 								
@@ -193,9 +195,9 @@ public: // ctor
 
 				//outlet (quench)
 				// 'refill ghost boundary nodes (right wall) with previous time step' 	
-				 	// l.f[3][l.index(l.nx-1,j)] = outlet3;
-				 	// l.f[6][l.index(l.nx-1,j)] = outlet6;
-				 	// l.f[7][l.index(l.nx-1,j)] = outlet7;
+				 	l.f[3][l.index(l.nx-1,j)] = outlet3[j];
+				 	l.f[6][l.index(l.nx-1,j)] = outlet6[j];
+				 	l.f[7][l.index(l.nx-1,j)] = outlet7[j];
 
 				// // Zou-he Inlet (Microscopic BC)
 				// 	l.f[1][l.index(-1,j)] = l.f[3][l.index(-1,j)]+2/3*rho_inlet*u_inlet;
@@ -237,7 +239,7 @@ public: // ctor
 			// 		l.f[8][l.index(i,l.ny-1)-shift[8]] = l.f[5][l.index(i,l.ny)]; // moving SW
 			// 		l.f[7][l.index(i,l.ny-1)-shift[7]] = l.f[6][l.index(i,l.ny)]; // moving SE
 			// 	}
-
+			 fix_missing_populations();
 
 	}
 	
@@ -246,7 +248,7 @@ public: // ctor
 	{
 		// fix_missing_populations()
 		// Set the type of simulation of objects (dynamic, static)
-		std::string sim_type = "static";
+		std::string sim_type = "dynamic";
 
 		for (auto i = l.shapes.begin(); i != l.shapes.end(); i++)
 		{
@@ -258,7 +260,7 @@ public: // ctor
 			if (sim_type == "dynamic")
 			{
 				// Rotate (all shapes)	
-				(*i)->set_orientation((*i)->get_orientation()+0.1);
+				// (*i)->set_orientation((*i)->get_orientation()+0.1);
 
 				for(auto j = currentSolidNodes.begin(); j != currentSolidNodes.end(); j++)
 				{
@@ -358,9 +360,9 @@ public: // ctor
 	void step()
 	{
 
-		// advect();
+		advect();
 		wall_bc();
-		// collide();
+		collide();
 
 		// eval_forces();
 		// move_shape();
@@ -436,9 +438,12 @@ public:	// for interaction with immersed shape
 	void fix_missing_populations()
 	{
 		// boundary nodes iterator
-		std::vector<lb::coordinate<int>> currentBoundary = mSingleImmersedBody->get_boundary_nodes();
+		// std::vector<lb::coordinate<int>> currentBoundary = mSingleImmersedBody->get_boundary_nodes();
+		auto mSingleImmersedBody = *l.shapes.begin(); 
+		auto currentBoundary = mSingleImmersedBody->get_boundary_nodes();
 
-		// clear target rho and u
+		// get_boundary_nodes();
+		// // clear target rho and u
 		l.clear_rho_target_for_all_boundary_nodes();
 		l.clear_u_target_for_all_boundary_nodes();
 
@@ -447,9 +452,18 @@ public:	// for interaction with immersed shape
 			// lattice representation indices for current node
 			int iIndex = it->i; int jIndex = it->j;
 			lb::coordinate<int> currentCoordinate(iIndex,jIndex);
+			// auto test = mSingleImmersedBody->find_missing_populations(currentCoordinate);
 
 			// find missing populations at current node
 			std::vector<int> currentMissingPopulations = mSingleImmersedBody->find_missing_populations(currentCoordinate);
+			
+			// Bounce-back test (simple implementation)
+			// for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++)
+			// {
+			// 	l.get_node(iIndex,jIndex).f(*mIt) = l.get_node(iIndex,jIndex).f(lb::velocity_set().incoming_velocity_to_outgoing_velocity(*mIt));
+			// }	
+			
+	
 
 			//-- The following naming is in accordance with equation 14 from reference paper of Dorschner et al. -------//
 
@@ -548,10 +562,10 @@ public:	// for interaction with immersed shape
 				 2*(Pxy)*(currentVelocity.i*currentVelocity.j)));
 			}
 
-			
+		
 		}
 
-
+	
 
 		
 	}

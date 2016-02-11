@@ -133,11 +133,11 @@ public:
                 CGAL::Object o = CGAL::intersection(projectingRay,*edge);
                 if(const Point* op = CGAL::object_cast<Point>(&o))
                 {
-                    std::cout << "point type " << std::endl;
+                    //std::cout << "point type " << std::endl;
                     squaredDistance = CGAL::to_double(CGAL::squared_distance(boundaryNodePoint, *op));
                 } else if (const Segment* os = CGAL::object_cast<Segment>(&o))
                 {
-                    std::cout << "segment type " << std::endl;
+                    //std::cout << "segment type " << std::endl;
                     squaredDistance =
                             std::min(CGAL::to_double(CGAL::squared_distance(boundaryNodePoint, os->target())),
                                      CGAL::to_double(CGAL::squared_distance(boundaryNodePoint, os->source())));
