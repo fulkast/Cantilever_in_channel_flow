@@ -100,7 +100,13 @@ public: // ctor
 
 		}
 
+		// Add shapes
+		l.add_to_shapes(new cylinder_2D(lb::coordinate<double>(10*D,10*D),0,D/2));
+		l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(20*D,10*D), 0, 20, 20));
 
+
+		// Initialize missing populations
+		
 	}
 	
 	/** 
@@ -239,29 +245,59 @@ public: // ctor
 	void wall_bc()
 	{
 		// fix_missing_populations()
+		// Set the type of simulation of objects (dynamic, static)
+		std::string sim_type = "static";
 
 		for (auto i = l.shapes.begin(); i != l.shapes.end(); i++)
 		{
 
 			std::vector<lb::coordinate<int>> currentBoundaryNodes = (*i)->get_boundary_nodes();
 			std::vector<lb::coordinate<int>> currentSolidNodes = (*i)->get_internal_nodes();
-			(*i)->set_orientation((*i)->get_orientation()+0.1);
-			(*i)->update_shape();
 
-			for(auto j = currentSolidNodes.begin(); j != currentSolidNodes.end(); j++)
+			
+			if (sim_type == "dynamic")
 			{
-				lb::coordinate<int> a_coordinate(j->i,j->j);
-				l.set_is_wall_node(a_coordinate);
+				// Rotate (all shapes)	
+				(*i)->set_orientation((*i)->get_orientation()+0.1);
+
+				for(auto j = currentSolidNodes.begin(); j != currentSolidNodes.end(); j++)
+				{
+					//Delete shapes in visualization (to refresh)
+					lb::coordinate<int> a_coordinate(j->i,j->j);
+					l.unset_is_wall_node(a_coordinate);
+					
+				}
+				for(auto j = currentBoundaryNodes.begin(); j != currentBoundaryNodes.end(); j++)
+				{
+					lb::coordinate<int> a_coordinate(j->i,j->j);
+					l.unset_is_boundary_node(a_coordinate);
+					// l.get_node(j->i,j->j).rho() = 1; //test visualization
+				}
+
+				// UPDATE -Find the new wall & boundary nodes
+				(*i)->update_shape(); 
+				currentBoundaryNodes = (*i)->get_boundary_nodes();
+				currentSolidNodes = (*i)->get_internal_nodes();
+						
+				for(auto j = currentSolidNodes.begin(); j != currentSolidNodes.end(); j++)
+				{
+					//redraw shapes
+					lb::coordinate<int> a_coordinate(j->i,j->j);
+					l.set_is_wall_node(a_coordinate);
+				}
+
+				for(auto j = currentBoundaryNodes.begin(); j != currentBoundaryNodes.end(); j++)
+				{
+					lb::coordinate<int> a_coordinate(j->i,j->j);
+					l.set_is_boundary_node(a_coordinate);
+					// l.get_node(j->i,j->j).rho() = 100; //test visualization 
+				}
+	
 			}
-
-			for(auto j = currentBoundaryNodes.begin(); j != currentBoundaryNodes.end(); j++)
-			{
-				//
-				l.get_node(j->i,j->j).rho() = 100;
-			}
-
-
 		}
+
+			
+
 
 		#pragma omp parallel for
 		for (unsigned int i=0; i<l.wall_nodes.size(); ++i)
@@ -313,6 +349,7 @@ public: // ctor
 				
 			}
 		}
+		
 		// **************************
 		
 	}
@@ -321,9 +358,9 @@ public: // ctor
 	void step()
 	{
 
-		advect();
+		// advect();
 		wall_bc();
-		collide();
+		// collide();
 
 		// eval_forces();
 		// move_shape();
@@ -371,6 +408,29 @@ public:	// for interaction with immersed shape
 	void set_shape(geometry_2D* a_shape)
 	{
 		mSingleImmersedBody = a_shape;
+	}
+
+	void check_node_status()
+	{
+		// For all nodes that have property 'wall' but have become boundaryNodes || Fluid Node
+		// Find all the nodes that aren't a wall anymore by looking for the difference set of node with 'wall' and the most recent internal nodes of all shapes
+		// for(auto &currentWallNode : l.wall_nodes)
+		// {
+		// 	if (currentWallNode.first) == true)
+		// 	{
+		// 		// iter.first --> gives pair of coordinates of that node.
+
+		// 		//if still wall --> continue
+
+		// 		//else --> set as refill node
+		// 		// l.unset_is_wall_node(currentWallNode);
+		// 		// l.set_is_refill_node(currentWallNode);
+		// 	}
+
+
+
+		// }
+				
 	}
 
 	void fix_missing_populations()

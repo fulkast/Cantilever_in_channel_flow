@@ -15,9 +15,9 @@ int main(int argc, char *argv[])
 
 	lb::simulation* sim = new lb::simulation(40*D,20*D,20,0.05,D); // nx, ny, Re, v_max, D
 	sim->initialize();
-	// sim->l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(100.5,100.5), 0, 20, 20));
+	// sim->l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(20*D,10*D), 0, 20, 20));
 	// sim->l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(150.5, 150.5),0,15,15));
-	sim->l.add_to_shapes(new cylinder_2D(lb::coordinate<double>(10*D,10*D),0,D/2));
+	// sim->l.add_to_shapes(new cylinder_2D(lb::coordinate<double>(10*D,10*D),0,D/2));
 	sim->l.print_shapes();
 	std::cout << "Initialized lattice..." << std::endl;
 	std::cout << *sim << std::endl;
