@@ -1,6 +1,7 @@
 #include "geometry_2D.hpp"
 #include <CGAL/Exact_circular_kernel_2.h>
 #include <CGAL/Line_arc_2.h>
+#include <iterator>
 
 typedef CGAL::Exact_circular_kernel_2 Circle_K;
 typedef CGAL::Circle_2<Circle_K> Circle_K_Circle;
@@ -93,15 +94,23 @@ public:
 
     double get_ray_length_at_intersection(lb::coordinate<int> boundary_node, int lb_velocity_index)
     {
-//        double squaredDistance = 0;
-//
-//        // flip directions to get the ray opposite of the missing population index's ray
-//        lb_velocity_index = lb::velocity_set().incoming_velocity_to_outgoing_velocity(lb_velocity_index);
-//
-//        Circle_K_Point boundaryNodePoint(boundary_node.i,boundary_node.j);
-//        Circle_K_Line_Arc projectingRay(boundaryNodePoint,
-//                              (boundary_node.i+lb::velocity_set().c[0][lb_velocity_index],
-//                                    boundary_node.j+lb::velocity_set().c[1][lb_velocity_index]));
+        double squaredDistance = 0;
+
+        // flip directions to get the ray opposite of the missing population index's ray
+        lb_velocity_index = lb::velocity_set().incoming_velocity_to_outgoing_velocity(lb_velocity_index);
+
+        Circle_K_Point boundaryNodePoint(boundary_node.i,boundary_node.j);
+        Circle_K_Line_Arc projectingRay(boundaryNodePoint,
+                                Circle_K_Point(boundary_node.i+lb::velocity_set().c[0][lb_velocity_index],
+                                    boundary_node.j+lb::velocity_set().c[1][lb_velocity_index]));
+
+        std::ostream_iterator<CGAL::Object> out_it (std::cout,", ");
+
+//        out_it = CGAL::intersection(projectingRay,mCircle);
+
+
+
+
 
         int i = boundary_node.i - mCenterOfMass.i;
         int j = boundary_node.j - mCenterOfMass.j;
