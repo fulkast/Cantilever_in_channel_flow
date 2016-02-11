@@ -3,7 +3,25 @@
 #include "velocity_set.hpp"
 #include <map>
 #include <cassert>
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+#include <CGAL/Aff_transformation_2.h>
+#include <CGAL/Cartesian.h>
+#include <CGAL/Vector_2.h>
+#include <CGAL/Polygon_2.h>
+#include <CGAL/Bbox_2.h>
+#include <CGAL/Segment_2.h>
+#include <CGAL/Circle_2.h>
+
 #pragma once
+
+typedef CGAL::Exact_predicates_exact_constructions_kernel K;
+typedef K::Point_2 Point;
+typedef CGAL::Polygon_2<K> Polygon_2;
+typedef CGAL::Aff_transformation_2<K> Transformation;
+typedef CGAL::Vector_2<K> Vector;
+typedef CGAL::Segment_2<K> Segment;
+typedef CGAL::Circle_2<K> Circle;
+
 
 class geometry_2D {
     // Define a 2D geometry by its center of mass and counter clock wise orientation relative to the
