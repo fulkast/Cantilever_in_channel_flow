@@ -43,7 +43,7 @@ public: // ctor
 	  Re(_Re), 
 	  Vmax(_Vmax),
 	  D(_D),
-	  visc(_Vmax*D/_Re),
+	  visc(_Vmax*_D/_Re),
 	  beta( 1/(2*visc/(velocity_set().cs*velocity_set().cs) + 1) ), 
 	  time(0),
 	  file_output(true), // set to true if you want to write files
@@ -477,16 +477,15 @@ public:	// for interaction with immersed shape
 			// Grad's Approximation 
 			for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++)
 			{
-				// THIS PART IS WRONG
-				// lb::coordinate<int> currentVelocity(lb::velocity_set().c[0][*mIt] , lb::velocity_set().c[1][*mIt]);
+				lb::coordinate<int> currentVelocity(lb::velocity_set().c[0][*mIt] , lb::velocity_set().c[1][*mIt]);
 
-				 // l.f[mIt][l.get_node(iIndex,jIndex)] = lb::velocity_set().W[mIt] * (rho_tgt +
-				 // rho_tgt*u_tgt.i*currentVelocity.i /(lb::velocity_set().cs *lb::velocity_set().cs) +
-				 // rho_tgt*u_tgt.j*currentVelocity.j /(lb::velocity_set().cs *lb::velocity_set().cs) +
-				 // (1/(2*lb::velocity_set().cs *lb::velocity_set().cs * lb::velocity_set().cs *lb::velocity_set().cs)) *
-				 // ((Pxx - rho_tgt*lb::velocity_set().cs *lb::velocity_set().cs)*(currentVelocity.i*currentVelocity.i - lb::velocity_set().cs *lb::velocity_set().cs) +
-				 // (Pyy -rho_tgt*lb::velocity_set().cs *lb::velocity_set().cs)*(currentVelocity.j*currentVelocity.j - lb::velocity_set().cs *lb::velocity_set().cs) +
-				 // 	2*(Pxy)*(currentVelocity.i*currentVelocity.j)));
+				l.f[*mIt][l.index(iIndex,jIndex)] =  lb::velocity_set().W[*mIt] * (rho_tgt +
+				 rho_tgt*u_tgt.i*currentVelocity.i /(lb::velocity_set().cs *lb::velocity_set().cs) +
+				 rho_tgt*u_tgt.j*currentVelocity.j /(lb::velocity_set().cs *lb::velocity_set().cs) +
+				 (1/(2*lb::velocity_set().cs *lb::velocity_set().cs * lb::velocity_set().cs *lb::velocity_set().cs)) *
+				 ((Pxx - rho_tgt*lb::velocity_set().cs *lb::velocity_set().cs)*(currentVelocity.i*currentVelocity.i - lb::velocity_set().cs *lb::velocity_set().cs) +
+				 (Pyy -rho_tgt*lb::velocity_set().cs *lb::velocity_set().cs)*(currentVelocity.j*currentVelocity.j - lb::velocity_set().cs *lb::velocity_set().cs) +
+				 2*(Pxy)*(currentVelocity.i*currentVelocity.j)));
 			}
 
 			
