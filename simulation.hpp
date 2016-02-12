@@ -103,8 +103,8 @@ public: // ctor
 		/* *************
 		* Add shapes 
 		******************* */
-		 // l.add_to_shapes(new cylinder_2D(lb::coordinate<double>(10*D,10*D),0,D/2));
-		l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(10*D,10*D), 0, D, D));
+		  l.add_to_shapes(new cylinder_2D(lb::coordinate<double>(10*D,10*D),0,D/2));
+//		l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(10*D,10*D), 0, D, D));
 		
 
 		fix_missing_populations();
@@ -354,7 +354,10 @@ public: // ctor
 		advect();
 		wall_bc();
 		collide();
-		force_evaluation();
+		force_evaluation(FxSingleBody,FySingleBody);
+		CdSingleBody = get_aerodynamic_coeffcient_from_force(FxSingleBody);
+		ClSingleBody = get_aerodynamic_coeffcient_from_force(FySingleBody);
+		print_aerodynamic_info();
 		// move_shape();
 		// find_and_fix_refill_nodes();
 
@@ -406,7 +409,7 @@ public:	// for interaction with immersed shape
 	{	
 		// boundary nodes iterator	
 		auto mSingleImmersedBody = *l.shapes.begin(); // More general
-		auto currentBoundary = mSingleImmersedBody->();
+		//auto currentBoundary = mSingleImmersedBody->();
 
 
 
@@ -430,11 +433,11 @@ public:	// for interaction with immersed shape
 		// }
 				
 	}
-	void force_evaluation()
+	void force_evaluation(double &Fx, double &Fy)
 	{
-		double Fx = 0;
-		double Fy = 0;
 
+		Fx = 0;
+		Fy = 0;
 		auto mSingleImmersedBody = *l.shapes.begin(); // More general
 		auto currentBoundary = mSingleImmersedBody->get_boundary_nodes();
 
@@ -457,10 +460,33 @@ public:	// for interaction with immersed shape
 	 			  	+ l.get_node(iIndex,jIndex).f(*mIt));
 			}	
 		}
-		// std::cout << Fx << " " << Fy << std::endl;
+//		 std::cout << Fx << " " << Fy << std::endl;
 
 		// STORE Fx and Fy in data file for post-processing
 	}
+
+	double get_aerodynamic_coeffcient_from_force(double& Force)
+	{
+		double result = Force;
+		result /= (0.5*1*Vmax*Vmax*D);
+
+		return result;
+	}
+
+	void print_aerodynamic_info()
+	{
+
+		std::cout << "At timestep: " << time << std::endl;
+		std::cout << '\t' << "Drag coefficient of: " << CdSingleBody << '\n';
+		std::cout << '\t' << "Lift coefficient of: " << ClSingleBody << '\n';
+		std::cout << '\t' << "Change in magnitude from previous step: " << std::abs(CdSingleBody-CdSingleBodyPreviousTimeStep) << std::endl;
+
+		CdSingleBodyPreviousTimeStep = CdSingleBody;
+		ClSingleBodyPreviousTimeStep = ClSingleBody;
+
+	}
+
+
 	void fix_missing_populations()
 	{
 		string approx = "grads";
@@ -615,6 +641,13 @@ public: // members
 	bool file_output;          ///< flag whether to write files
 	unsigned int output_freq;  ///< file output frequency
 	unsigned int output_index; ///< index for file naming
+	double FxSingleBody;		// reaction force on a single submerged body
+	double FySingleBody;
+	double CdSingleBody;
+	double ClSingleBody;
+	double CdSingleBodyPreviousTimeStep = 0;
+	double ClSingleBodyPreviousTimeStep = 0;
+
 
 	geometry_2D* mSingleImmersedBody = nullptr; //An immersed object interacting with the fluid
 
@@ -624,3 +657,4 @@ public: // members
 } // lb
 
 #endif // LB_SIMULATION_HPP_INCLUDED
+
