@@ -753,25 +753,44 @@ void lattice::print_out_going_velocities(lb::coordinate<int> position)
 
 void lattice::write_fields(std::string file_name)
 {
-	std::ofstream ofs(file_name.c_str());
-	if (ofs.is_open())
-	{
-		// write header (comment that part if necessary)
-		ofs << "x y rho u v\n";
-		// write body
-		for (unsigned int j=0; j<ny; ++j)
-		{
-			for (unsigned int i=0; i<nx; ++i) 
-			{
-				ofs << i << " " << j << " " 
-				    << std::scientific << nodes[(j+buffer_size)*real_nx + i + buffer_size].rho() << " "
-				    << std::scientific << nodes[(j+buffer_size)*real_nx + i + buffer_size].u() << " "
-				    << std::scientific << nodes[(j+buffer_size)*real_nx + i + buffer_size].v() << "\n";
-			}
-		} 
-	}
-	else throw std::runtime_error("could not write to file");
-}
+	// std::ofstream ofs(file_name.c_str());
+	// //using ofstream to output strings to a text file
+   
+
+ //   if (ofs.is_open())
+ //   {
+ //   	ofs << "This is a test.\n";
+ //   	ofs << "I am learning C++.\n";
+ //   	ofs.close();
+ //   }
+ //   else cout << "Can't open file";
+
+   
+// if (ofs.is_open())
+// 	{
+
+// 		// write header (comment that part if necessary)
+// 		ofs << "x y rho u v\n";
+// 	// 	// write body
+// 	// 	for (unsigned int j=0; j<ny; ++j)
+// 	// 	{
+// 	// 		for (unsigned int i=0; i<nx; ++i) 
+// 	// 		{
+// 	// 			// ofs << i << " " << j << " " 
+// 	// 			//     << std::scientific << nodes[(j+buffer_size)*real_nx + i + buffer_size].rho() << " "
+// 	// 			//     << std::scientific << nodes[(j+buffer_size)*real_nx + i + buffer_size].u() << " "
+// 	// 			//     << std::scientific << nodes[(j+buffer_size)*real_nx + i + buffer_size].v() << "\n";
+// 	// 		}
+// 	// 	} 
+// 	}
+// 	else throw std::runtime_error("could not write to file");
+// }
+
+}	
+
+
+
+// 	
 
 } // lb
 

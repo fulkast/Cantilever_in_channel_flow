@@ -15,18 +15,6 @@ int main(int argc, char *argv[])
 
 	lb::simulation* sim = new lb::simulation(40*D,20*D,20,0.05,D); // nx, ny, Re, v_max, D
 	sim->initialize();
-	// sim->l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(20*D,10*D), 0, 20, 20));
-	// sim->l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(150.5, 150.5),0,15,15));
-	// sim->l.add_to_shapes(new cylinder_2D(lb::coordinate<double>(10*D,10*D),0,D/2));
-	// sim->l.print_shapes();
-	// std::cout << "Initialized lattice..." << std::endl;
-	// std::cout << *sim << std::endl;
-
-	// Some stuff to test functionalities
-	// sim->l.print_bounding_nodes();
-	// sim->l.print_out_going_velocities(lb::coordinate<int>(90,89));
-	// std::cout << "The distance to true boundary at " << lb::coordinate<int>(89,100) <<
-	// 		" is: " << sim->l.get_shortest_distance_to_true_boundary(lb::coordinate<int>(89,100)) << std::endl;
 
 
 #ifdef USE_OPENGL_VISUALIZATION
@@ -66,7 +54,7 @@ int main(int argc, char *argv[])
 		
 		// use a loop like this to run the simulation
 		
-		for (unsigned int i=0; i<2; ++i)
+		for (unsigned int i=0; i<200; ++i)
 		{
 			std::cout << "Starting step: " << i << std::endl;
 			sim->step();
