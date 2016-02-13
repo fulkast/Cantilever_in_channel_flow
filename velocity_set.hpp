@@ -75,6 +75,7 @@ public:
 				std::cerr << "Invalid velocity switching index called... " << std::endl;
 			}
 	}
+
 	const float_type cs = 1.0/std::sqrt(3.0);   ///< Speed of sound
 	
 	const unsigned int size = 9;                ///< Number of velocities
