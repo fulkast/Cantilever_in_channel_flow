@@ -250,7 +250,7 @@ public: // ctor
 				// Rotate (all shapes)	
 				// (*i)->set_orientation((*i)->get_orientation()+0.1);
 				auto COM = (*i)->get_center_of_mass();
-				(*i)->set_center_of_mass(lb::coordinate<double>(COM.i+0.5,COM.j)); 
+				(*i)->set_center_of_mass(lb::coordinate<double>(COM.i+0.1,COM.j)); 
 
 
 				for(auto j = currentSolidNodes.begin(); j != currentSolidNodes.end(); j++)
@@ -299,7 +299,10 @@ public: // ctor
 				{
 					if (!test_refill_nodes[j])
 					{
-						// l.get_node(currentSolidNodes[j].i,currentSolidNodes[j].j).rho() = 100; 	
+						l.get_node(currentSolidNodes[j].i,currentSolidNodes[j].j).rho() =1; 	
+						l.get_node(currentSolidNodes[j].i,currentSolidNodes[j].j).u() =Vmax;
+						l.get_node(currentSolidNodes[j].i,currentSolidNodes[j].j).v()=0;
+						lb::velocity_set().equilibrate(l.get_node(currentSolidNodes[j].i,currentSolidNodes[j].j));
 						auto foobar2 = lb::coordinate<int>(currentSolidNodes[j].i,currentSolidNodes[j].j);
 						l.set_is_refill_node(foobar2);
 					}
@@ -371,9 +374,9 @@ public: // ctor
 	void step()
 	{
 
-		// advect();
+		advect();
 		wall_bc();
-		// collide();
+		collide();
 		// force_evaluation(FxSingleBody,FySingleBody);
 		// CdSingleBody = get_aerodynamic_coeffcient_from_force(FxSingleBody);
 		// ClSingleBody = get_aerodynamic_coeffcient_from_force(FySingleBody);
