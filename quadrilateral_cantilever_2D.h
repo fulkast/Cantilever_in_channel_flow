@@ -14,18 +14,30 @@ class quadrilateral_cantilever_2D : public geometry_2D {
 public:
 
 //    quadrilateral_cantilever_2D(lb::coordinate<double> centerOfMass, double orientation, double width, double height) :
-    quadrilateral_cantilever_2D(lb::coordinate<double> leftMostSegmentCenterOfMass, double width, double height, int nSegments, double springWidth) :
-     mWidth(width), mHeight(height), mNSegments(nSegments), mSegmentWidth(width/nSegments), mSpringWidth(springWidth)
+    quadrilateral_cantilever_2D(lb::coordinate<double> leftMostSegmentCenterOfMass, double orientation, double width, double height, int nSegments, double springWidth) :
+     mWidth(width), mHeight(height), mNSegments(nSegments), mSegmentWidth(width/nSegments), mSpringWidth(springWidth), mLeftMostSegmentOrientation(orientation)
     {
-        mLeftMostSegment = new quadrilateral_2D(leftMostSegmentCenterOfMass,0.0,width/nSegments,height);
+        mLeftMostSegment = new quadrilateral_2D(leftMostSegmentCenterOfMass,mLeftMostSegmentOrientation,width/nSegments,height);
         mQuadrilateralSegments.push_back(mLeftMostSegment);
 
         mUnionPolygon = new Polygon_2(mPoints,mPoints+4);
 
         for (int i = 1; i < mNSegments;i++)
         {
-            lb::coordinate<double> segmentCenter(leftMostSegmentCenterOfMass.i+mSpringWidth+i*mSegmentWidth,leftMostSegmentCenterOfMass.j);
-            mQuadrilateralSegments.push_back(new quadrilateral_2D(segmentCenter,0.0,mSegmentWidth,mHeight));
+            double previousSegmentOrientation = mQuadrilateralSegments[i-1]->get_orientation();
+            double segmentCenterX = cos(previousSegmentOrientation)*(mSpringWidth+mSegmentWidth/2);
+            double segmentCenterY = sin(previousSegmentOrientation)*(mSpringWidth+mSegmentWidth/2);
+
+            double currentSegmentOrientation = 0.5;
+
+            segmentCenterX = cos(currentSegmentOrientation)*segmentCenterX + -sin(currentSegmentOrientation)*segmentCenterY;
+            segmentCenterY = sin(currentSegmentOrientation)*segmentCenterX + cos(currentSegmentOrientation)*segmentCenterY;
+
+            lb::coordinate<double> segmentCenter(leftMostSegmentCenterOfMass.i + segmentCenterX,
+                                                  (leftMostSegmentCenterOfMass.j + segmentCenterY)
+            );
+
+            mQuadrilateralSegments.push_back(new quadrilateral_2D(segmentCenter,previousSegmentOrientation+currentSegmentOrientation,mSegmentWidth,mHeight));
         }
 
         update_shape();
@@ -58,12 +70,17 @@ public:
         {
             mUnionPoints.push_back(mQuadrilateralSegments[i]->get_top_left_point());
             mUnionPoints.push_back(mQuadrilateralSegments[i]->get_top_right_point());
+//            std::cout << mQuadrilateralSegments[i]->get_top_left_point()
+//            << " " << mQuadrilateralSegments[i]->get_top_right_point() << std::endl;
         }
 
         for (int i = mNSegments-1; i >= 0 ; i--)
         {
             mUnionPoints.push_back(mQuadrilateralSegments[i]->get_bottom_right_point());
             mUnionPoints.push_back(mQuadrilateralSegments[i]->get_bottom_left_point());
+
+//            std::cout << mQuadrilateralSegments[i]->get_bottom_right_point()
+//            << " " << mQuadrilateralSegments[i]->get_bottom_left_point() << std::endl;
         }
 
 
@@ -172,6 +189,28 @@ public:
         return std::sqrt(squaredDistance);
     }
 
+    void update_external_moments()
+    {
+        for (auto i = mQuadrilateralSegments.begin()+1; i != mQuadrilateralSegments.end()-1; i++)
+        {
+            double currentSegmentOrientation = (*i)->get_orientation();
+            double previousSegmentOrientation = (*i-1)->get_orientation();
+            double nextSegmentOrientation = (*i+1)->get_orientation();
+            (*i)->set_angular_acceleration(-9.8*cos((*i)->get_orientation())
+                                           -1*(currentSegmentOrientation-previousSegmentOrientation)
+                                           +1*(nextSegmentOrientation-currentSegmentOrientation));
+
+        }
+        auto i = mQuadrilateralSegments.end()-1;
+        double currentSegmentOrientation = (*i)->get_orientation();
+        double previousSegmentOrientation = (*i-1)->get_orientation();
+        (*i)->set_angular_acceleration(-9.8*cos((*i)->get_orientation())
+                                       -1*(currentSegmentOrientation-previousSegmentOrientation));
+
+    }
+
+
+
     std::vector<int> find_missing_populations(lb::coordinate<int> position)
     {
         return mMissingPopulationIndexMap[make_pair(position.i,position.j)];
@@ -192,9 +231,11 @@ private:
     double mSegmentWidth = 0;
     double mSpringWidth;
 
+
     Polygon_2* mUnionPolygon;
     std::vector<Point> mUnionPoints;
     quadrilateral_2D* mLeftMostSegment;
+    double mLeftMostSegmentOrientation;
     std::vector<quadrilateral_2D*> mQuadrilateralSegments;
     Point mPoints[4];
     Transformation mRotate;

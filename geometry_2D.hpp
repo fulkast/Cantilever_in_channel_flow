@@ -90,7 +90,7 @@ public:
 
     void set_linear_acceleration(lb::coordinate<double> a_tuple);
 
-
+    void step_forward_one_step();
 
 
 protected:
@@ -103,9 +103,9 @@ protected:
     std::vector<std::pair<int,int>> mIsCurrentlyAnInternalNode;     //
     // indices
 
-    lb::coordinate<double> mLinearVelocity;
-    lb::coordinate<double> mLinearAcceleration;
-    double mAngularVelocity;
-    double mAngularAcceleration;
+    lb::coordinate<double> mLinearVelocity = lb::coordinate<double>(0.0,0.0);
+    lb::coordinate<double> mLinearAcceleration = lb::coordinate<double>(0.0,0.0);
+    double mAngularVelocity = 0;
+    double mAngularAcceleration = 0;
 
 };

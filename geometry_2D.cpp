@@ -114,3 +114,15 @@ void geometry_2D::set_linear_acceleration(lb::coordinate<double> a_tuple)
 {
     mLinearAcceleration = a_tuple;
 }
+
+void geometry_2D::step_forward_one_step()
+{
+    mCenterOfMass.i += 1/2*mLinearAcceleration.i+mLinearVelocity.i;
+    mCenterOfMass.j += 1/2*mLinearAcceleration.j+mLinearVelocity.j;
+    mOrientation += 1/2*mAngularAcceleration + mAngularVelocity;
+
+    mLinearVelocity.i += mLinearAcceleration.i;
+    mLinearVelocity.j += mLinearAcceleration.j;
+    mAngularVelocity += mAngularAcceleration;
+
+}

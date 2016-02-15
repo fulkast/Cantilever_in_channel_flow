@@ -104,9 +104,9 @@ public: // ctor
 		/* *************
 		* Add shapes 
 		******************* */
-//		  l.add_to_shapes(new cylinder_2D(lb::coordinate<double>(10*D,10*D),0,D/2));
+		  l.add_to_shapes(new cylinder_2D(lb::coordinate<double>(10*D,10*D),0,D/2));
 //		l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(10*D-10,10*D-10), 0, D, D));
-		l.add_to_shapes(new quadrilateral_cantilever_2D(lb::coordinate<double>(10*D,10*D), 5*D, D, 5, D/10));
+//		l.add_to_shapes(new quadrilateral_cantilever_2D(lb::coordinate<double>(10*D,10*D), 1.57075,10*D, D/10,10, D/10));
 
 
 		fix_missing_populations();
@@ -253,8 +253,10 @@ public: // ctor
 				// (*i)->set_orientation((*i)->get_orientation()+0.1);
 				auto COM = (*i)->get_center_of_mass();
 
-				(*i)->set_center_of_mass(lb::coordinate<double>(COM.i+0.1,COM.j)); 
+//				(*i)->set_center_of_mass(lb::coordinate<double>(COM.i+0.1,COM.j));
 
+				(*i)->set_linear_velocity(lb::coordinate<double>(0.0,0.5*sin(time*2*3.141592/100)));
+				(*i)->step_forward_one_step();
 
 
 				for(auto j = currentSolidNodes.begin(); j != currentSolidNodes.end(); j++)
