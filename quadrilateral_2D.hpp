@@ -48,6 +48,7 @@ public:
         mBoundaryNodes.clear();
         mInternalNodes.clear();
         mMissingPopulationIndexMap.clear();
+        mIsCurrentlyAnInternalNode.clear();
 
         // get bounding box of current shape
         CGAL::Bbox_2 boundingBox = mPolygon->bbox();
@@ -64,6 +65,7 @@ public:
                    CGAL::bounded_side_2(mPoints,mPoints+4,query_point, K()) == CGAL::ON_BOUNDARY)
                 {
                     mInternalNodes.push_back(lb::coordinate<int>(i,j));
+                    mIsCurrentlyAnInternalNode.push_back(make_pair(i,j));
                     continue;
                 }
 

@@ -250,16 +250,16 @@ public: // ctor
 				// Rotate (all shapes)	
 				// (*i)->set_orientation((*i)->get_orientation()+0.1);
 				auto COM = (*i)->get_center_of_mass();
-				// (*i)->set_center_of_mass(lb::coordinate<double>(COM.i,COM.j+1*D*std::sin(20.01*time))); // match sin frequency to the one of the simulation!
+				 (*i)->set_center_of_mass(lb::coordinate<double>(COM.i+0.5,COM.j)); // match sin frequency to the one of the simulation!
 
 
-				for(auto j = currentSolidNodes.begin(); j != currentSolidNodes.end(); j++)
-				{
-					//Delete shapes in visualization (to refresh)
-					lb::coordinate<int> a_coordinate(j->i,j->j);
-					l.unset_is_wall_node(a_coordinate);
-					
-				}
+//				for(auto j = currentSolidNodes.begin(); j != currentSolidNodes.end(); j++)
+//				{
+//					//Delete shapes in visualization (to refresh)
+//					lb::coordinate<int> a_coordinate(j->i,j->j);
+//					l.unset_is_wall_node(a_coordinate);
+//
+//				}
 				for(auto j = currentBoundaryNodes.begin(); j != currentBoundaryNodes.end(); j++)
 				{
 					lb::coordinate<int> a_coordinate(j->i,j->j);
@@ -271,7 +271,15 @@ public: // ctor
 				(*i)->update_shape(); 
 				currentBoundaryNodes = (*i)->get_boundary_nodes();
 				currentSolidNodes = (*i)->get_internal_nodes();
-						
+
+				for (auto it = l.wall_nodes.begin(); it != l.wall_nodes.end(); it++ )
+				{
+					mSingleImmersedBody->
+					cout << it->first.first << " " <<
+
+
+				}
+
 				for(auto j = currentSolidNodes.begin(); j != currentSolidNodes.end(); j++)
 				{
 					//redraw shapes

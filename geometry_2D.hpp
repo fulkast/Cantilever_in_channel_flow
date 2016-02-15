@@ -11,6 +11,7 @@
 #include <CGAL/Bbox_2.h>
 #include <CGAL/Segment_2.h>
 #include <CGAL/Circle_2.h>
+#include <algorithm>
 
 #pragma once
 
@@ -71,14 +72,17 @@ public:
 
     virtual void update_shape();
 
+    bool isCurrentlyAnInternalNode(lb::coordinate<int>& tuple);
+
 
 protected:
-    lb::coordinate<double> mCenterOfMass;                             // current object's center of mass
-    double mOrientation;                                           // current object's orientation
-    std::vector<lb::coordinate<int>> mBoundaryNodes;               // current object's boundaries
-    std::vector<lb::coordinate<int>> mInternalNodes;               // current object's wall internal nodes
+    lb::coordinate<double> mCenterOfMass;                           // current object's center of mass
+    double mOrientation;                                            // current object's orientation
+    std::vector<lb::coordinate<int>> mBoundaryNodes;                // current object's boundaries
+    std::vector<lb::coordinate<int>> mInternalNodes;                // current object's wall internal nodes
     std::map<std::pair<int,int>,std::vector<int>>
             mMissingPopulationIndexMap;                             // current boundary's out going velocity
+    std::vector<std::pair<int,int>> mIsCurrentlyAnInternalNode;     //
     // indices
 
 };

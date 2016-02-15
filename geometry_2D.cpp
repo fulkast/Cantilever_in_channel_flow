@@ -63,6 +63,13 @@ void geometry_2D::print_out_going_velocities(lb::coordinate<int> position)
     }
 }
 
+bool geometry_2D::isCurrentlyAnInternalNode(lb::coordinate<int>& tuple)
+{
+    auto isFoundAt = find(mIsCurrentlyAnInternalNode.begin(),mIsCurrentlyAnInternalNode.end(),std::make_pair(tuple.i,tuple.j));
+    return !(isFoundAt == mIsCurrentlyAnInternalNode.end());
+}
+
+
 void geometry_2D::update_shape()
 {
 

@@ -41,6 +41,7 @@ public:
         mBoundaryNodes.clear();
         mInternalNodes.clear();
         mMissingPopulationIndexMap.clear();
+        mIsCurrentlyAnInternalNode.clear();
 
         CGAL::Bbox_2 boundingBox = mCircle->bbox();
 
@@ -56,6 +57,7 @@ public:
                         mCircle->has_on_boundary(query_point))
                 {
                     mInternalNodes.push_back(lb::coordinate<int>(i,j));
+                    mIsCurrentlyAnInternalNode.push_back(make_pair(i,j));
                     continue;
                 }
 
