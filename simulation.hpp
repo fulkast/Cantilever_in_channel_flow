@@ -456,45 +456,6 @@ public:	// for interaction with immersed shape
 				// l.set_is_refill_node(currentCoordinate);
 				l.get_node(wall_iter->i,wall_iter->j).rho() = 100;
 			}
-
-
-			// else if (l.get_node(iIndex,jIndex).has_flag_property("refill"))
-			// {
-			// 	// l.unset_is_refill_node(currentCoordinate);
-			// 	// l.get_node(wall_iter->i,wall_iter->j).rho() = 1;
-			// }
-
-			// if ( l.get_node(wall_iter->i,wall_iter->j).has_flag_property("fluid") || l.get_node(wall_iter->i,wall_iter->j).has_flag_property("boundary"))
-			// {
-			// 	// lb::coordinate<int> currentCoordinate(wall_iter->i, wall_iter->j);
-			// 	// l.set_is_refill_node(currentCoordinate);
-			// 	// l.get_node(wall_iter->i,wall_iter->j).rho() = 100;
-			// }
-		}
-
-			
-			
-			// std::vector<int> currentMissingPopulations = mSingleImmersedBody->find_missing_populations(currentCoordinate);
-
-
-		// For all nodes that have property 'wall' but have become boundaryNodes || Fluid Node
-		// Find all the nodes that aren't a wall anymore by looking for the difference set of node with 'wall' and the most recent internal nodes of all shapes
-		// for(auto &currentWallNode : l.wall_nodes)
-		// {
-		// 	if (currentWallNode.first) == true)
-		// 	{
-		// 		// iter.first --> gives pair of coordinates of that node.
-
-		// 		//if still wall --> continue
-
-		// 		//else --> set as refill node
-		// 		// l.unset_is_wall_node(currentWallNode);
-		// 		// l.set_is_refill_node(currentWallNode);
-		// 	}
-
-
-
-		// }
 				
 	}
 	void force_evaluation(double &Fx, double &Fy)
@@ -524,7 +485,7 @@ public:	// for interaction with immersed shape
 	 			  	+ l.get_node(iIndex,jIndex).f(*mIt));
 			}	
 		}
-//		 std::cout << Fx << " " << Fy << std::endl;
+
 
 		// STORE Fx and Fy in data file for post-processing
 	}
@@ -545,6 +506,16 @@ public:	// for interaction with immersed shape
 		std::cout << '\t' << "Lift coefficient of: " << ClSingleBody << '\n';
 		std::cout << '\t' << "Change in magnitude from previous step: " << std::abs(CdSingleBody-CdSingleBodyPreviousTimeStep) << std::endl;
 
+		std::vector<int> recirc_length (1,ceil(10*D+D/2));
+		for (int i =ceil(10*D+D/2); i<=l.nx-1; i++)
+		{
+			if (l.get_node(i,10*D).u() <= 0 )
+			{
+				recirc_length.push_back(i);
+			}
+		}
+
+		double non_dim_length = 2*(recirc_length.back()-ceil(10*D+D/2))/D;
 		CdSingleBodyPreviousTimeStep = CdSingleBody;
 		ClSingleBodyPreviousTimeStep = ClSingleBody;
 
