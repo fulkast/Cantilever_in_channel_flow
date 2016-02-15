@@ -424,6 +424,7 @@ public: // members
 	std::vector<float_type> u;                ///< flow x-velocity data
 	std::vector<float_type> v;                ///< flow y-velocity data
 	std::vector<node> nodes;                  ///< array holding all node objects
+	std::vector<bool> find_refill_nodes(std::vector<coordinate<int>> &set1, std::vector<coordinate<int>> &set2);
 	/*
 	std::vector<node> wall_nodes;             ///< array holding node objects belonging to a solid wall
 	std::vector<node> boundary_nodes;	      ////<array holding all boundary node objeccts
@@ -572,6 +573,24 @@ std::ostream& operator<<(std::ostream& os, const lattice& l)
 	}
 	os << l.properties;
 	return os;
+}
+
+
+std::vector<bool> lattice::find_refill_nodes(std::vector<coordinate<int>>& set1, std::vector<coordinate<int>>& set2)
+{
+	std::vector<bool> foobar(set1.size(),false);
+	for (auto i=0; i<set1.size(); i++)
+	{
+		for (auto j=0; j<set2.size(); j++)
+		{
+			if ((set1[i].i==set2[j].i) && (set1[i].j==set2[j].j))
+			{
+				foobar[i] = true;
+				break;
+			}
+		}
+	}
+	return foobar ;
 }
 
 void lattice::add_wall(coordinate<int> min_coord, coordinate<int> max_coord)

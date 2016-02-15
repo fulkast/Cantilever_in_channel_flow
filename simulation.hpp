@@ -210,6 +210,7 @@ public: // ctor
 				// 							0.5*rho_outlet*v_outlet-rho_outlet*u_outlet/6 ;	
 													
 			 }
+
 			// (no slip) top and bottom 
 			 // include corners??
 			// South wall
@@ -244,13 +245,14 @@ public: // ctor
 			std::vector<lb::coordinate<int>> currentBoundaryNodes = (*i)->get_boundary_nodes();
 			std::vector<lb::coordinate<int>> currentSolidNodes = (*i)->get_internal_nodes();
 
-			
 			if (sim_type == "dynamic")
 			{
 				// Rotate (all shapes)	
 				// (*i)->set_orientation((*i)->get_orientation()+0.1);
 				auto COM = (*i)->get_center_of_mass();
-				 (*i)->set_center_of_mass(lb::coordinate<double>(COM.i+0.5,COM.j)); // match sin frequency to the one of the simulation!
+
+				(*i)->set_center_of_mass(lb::coordinate<double>(COM.i+0.1,COM.j)); 
+
 
 
 //				for(auto j = currentSolidNodes.begin(); j != currentSolidNodes.end(); j++)
@@ -267,20 +269,34 @@ public: // ctor
 					// l.get_node(j->i,j->j).rho() = 1; //test visualization
 				}
 
+				// for(auto j = l.refill_nodes.begin(); j!=l.refill_nodes.end(); j++)
+				// {
+
+				// 	l.get_node(j->first.first,j->first.second).rho() = 1; 	
+				// }
+
+				l.refill_nodes.clear();
+				//check_node_status();
 				// UPDATE -Find the new wall & boundary nodes
 				(*i)->update_shape(); 
 				currentBoundaryNodes = (*i)->get_boundary_nodes();
-				currentSolidNodes = (*i)->get_internal_nodes();
+//<<<<<<< HEAD
+//				currentSolidNodes = (*i)->get_internal_nodes();
+//
+//				for (auto it = l.wall_nodes.begin(); it != l.wall_nodes.end(); it++ )
+//				{
+//					mSingleImmersedBody->
+//					cout << it->first.first << " " <<
+//
+//
+//				}
+//
+//				for(auto j = currentSolidNodes.begin(); j != currentSolidNodes.end(); j++)
+//=======
+				std::vector<lb::coordinate<int>> newSolidNodes = (*i)->get_internal_nodes();
+						
+				for(auto j = newSolidNodes.begin(); j != newSolidNodes.end(); j++)
 
-				for (auto it = l.wall_nodes.begin(); it != l.wall_nodes.end(); it++ )
-				{
-					mSingleImmersedBody->
-					cout << it->first.first << " " <<
-
-
-				}
-
-				for(auto j = currentSolidNodes.begin(); j != currentSolidNodes.end(); j++)
 				{
 					//redraw shapes
 					lb::coordinate<int> a_coordinate(j->i,j->j);
@@ -292,6 +308,21 @@ public: // ctor
 					lb::coordinate<int> a_coordinate(j->i,j->j);
 					l.set_is_boundary_node(a_coordinate);
 					// l.get_node(j->i,j->j).rho() = 100; //test visualization 
+				}
+				
+				std::vector<bool> test_refill_nodes = l.find_refill_nodes(currentSolidNodes,newSolidNodes);
+				for(auto j = 0; j<test_refill_nodes.size(); j++)
+				{
+					if (!test_refill_nodes[j])
+					{
+						l.get_node(currentSolidNodes[j].i,currentSolidNodes[j].j).rho() =1; 	
+						l.get_node(currentSolidNodes[j].i,currentSolidNodes[j].j).u() =Vmax;
+						l.get_node(currentSolidNodes[j].i,currentSolidNodes[j].j).v()=0;
+						lb::velocity_set().equilibrate(l.get_node(currentSolidNodes[j].i,currentSolidNodes[j].j));
+						auto foobar2 = lb::coordinate<int>(currentSolidNodes[j].i,currentSolidNodes[j].j);
+						l.set_is_refill_node(foobar2);
+					}
+					
 				}
 	
 			}
@@ -362,10 +393,11 @@ public: // ctor
 		advect();
 		wall_bc();
 		collide();
-		force_evaluation(FxSingleBody,FySingleBody);
-		CdSingleBody = get_aerodynamic_coeffcient_from_force(FxSingleBody);
-		ClSingleBody = get_aerodynamic_coeffcient_from_force(FySingleBody);
-		print_aerodynamic_info();
+		// force_evaluation(FxSingleBody,FySingleBody);
+		// CdSingleBody = get_aerodynamic_coeffcient_from_force(FxSingleBody);
+		// ClSingleBody = get_aerodynamic_coeffcient_from_force(FySingleBody);
+		// print_aerodynamic_info();
+
 		// move_shape();
 		// find_and_fix_refill_nodes();
 
@@ -374,7 +406,7 @@ public: // ctor
 		// file io
 		if ( file_output && ( ((time+1) % output_freq) == 0 || time == 0 ) )
 		{
-			write_fields();
+			//write_fields();
 			++output_index;
 		}
 		
@@ -417,8 +449,37 @@ public:	// for interaction with immersed shape
 	{	
 		// boundary nodes iterator	
 		auto mSingleImmersedBody = *l.shapes.begin(); // More general
-		//auto currentBoundary = mSingleImmersedBody->();
+		auto WallNodes = mSingleImmersedBody->get_internal_nodes();
 
+		for (auto wall_iter = WallNodes.begin(); wall_iter <= WallNodes.end(); wall_iter++)
+		{
+			int iIndex = wall_iter->i; int jIndex = wall_iter->j;
+			lb::coordinate<int> currentCoordinate(iIndex,jIndex);
+
+			if (l.get_node(iIndex,jIndex).has_flag_property("fluid") || l.get_node(iIndex,jIndex).has_flag_property("boundary"))
+			{
+				// l.set_is_refill_node(currentCoordinate);
+				l.get_node(wall_iter->i,wall_iter->j).rho() = 100;
+			}
+
+
+			// else if (l.get_node(iIndex,jIndex).has_flag_property("refill"))
+			// {
+			// 	// l.unset_is_refill_node(currentCoordinate);
+			// 	// l.get_node(wall_iter->i,wall_iter->j).rho() = 1;
+			// }
+
+			// if ( l.get_node(wall_iter->i,wall_iter->j).has_flag_property("fluid") || l.get_node(wall_iter->i,wall_iter->j).has_flag_property("boundary"))
+			// {
+			// 	// lb::coordinate<int> currentCoordinate(wall_iter->i, wall_iter->j);
+			// 	// l.set_is_refill_node(currentCoordinate);
+			// 	// l.get_node(wall_iter->i,wall_iter->j).rho() = 100;
+			// }
+		}
+
+			
+			
+			// std::vector<int> currentMissingPopulations = mSingleImmersedBody->find_missing_populations(currentCoordinate);
 
 
 		// For all nodes that have property 'wall' but have become boundaryNodes || Fluid Node
