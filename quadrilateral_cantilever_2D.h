@@ -24,17 +24,18 @@ public:
 
         for (int i = 1; i < mNSegments;i++)
         {
+            lb::coordinate<double> previousSegmentCenterOfMass = mQuadrilateralSegments[i-1]->get_center_of_mass();
             double previousSegmentOrientation = mQuadrilateralSegments[i-1]->get_orientation();
-            double segmentCenterX = cos(previousSegmentOrientation)*(mSpringWidth+mSegmentWidth/2);
-            double segmentCenterY = sin(previousSegmentOrientation)*(mSpringWidth+mSegmentWidth/2);
+            double segmentCenterX = cos(previousSegmentOrientation)*(mSpringWidth+mSegmentWidth);
+            double segmentCenterY = sin(previousSegmentOrientation)*(mSpringWidth+mSegmentWidth);
 
-            double currentSegmentOrientation = 0.5;
+            double currentSegmentOrientation = 0.05;
 
             segmentCenterX = cos(currentSegmentOrientation)*segmentCenterX + -sin(currentSegmentOrientation)*segmentCenterY;
             segmentCenterY = sin(currentSegmentOrientation)*segmentCenterX + cos(currentSegmentOrientation)*segmentCenterY;
 
-            lb::coordinate<double> segmentCenter(leftMostSegmentCenterOfMass.i + segmentCenterX,
-                                                  (leftMostSegmentCenterOfMass.j + segmentCenterY)
+            lb::coordinate<double> segmentCenter(previousSegmentCenterOfMass.i + segmentCenterX,
+                                                  (previousSegmentCenterOfMass.j + segmentCenterY)
             );
 
             mQuadrilateralSegments.push_back(new quadrilateral_2D(segmentCenter,previousSegmentOrientation+currentSegmentOrientation,mSegmentWidth,mHeight));
@@ -51,6 +52,8 @@ public:
 
         }
         update_boundary_and_internal_nodes();
+
+
 
     }
 
@@ -223,6 +226,33 @@ public:
 
     }
 
+
+    void create_sinusoidal_motion(double segment_deflection)
+    {
+
+        for (auto i = 1; i < mQuadrilateralSegments.size();i ++)
+        {
+            mQuadrilateralSegments[i]->set_orientation(segment_deflection);
+            lb::coordinate<double> previousSegmentCenterOfMass = mQuadrilateralSegments[i-1]->get_center_of_mass();
+            double previousSegmentOrientation = mQuadrilateralSegments[i-1]->get_orientation();
+            double segmentCenterX = cos(previousSegmentOrientation)*(mSpringWidth+mSegmentWidth);
+            double segmentCenterY = sin(previousSegmentOrientation)*(mSpringWidth+mSegmentWidth);
+            double currentSegmentOrientation = segment_deflection;
+
+            segmentCenterX = cos(currentSegmentOrientation)*segmentCenterX + -sin(currentSegmentOrientation)*segmentCenterY;
+            segmentCenterY = sin(currentSegmentOrientation)*segmentCenterX + cos(currentSegmentOrientation)*segmentCenterY;
+
+            mQuadrilateralSegments[i]->set_center_of_mass(lb::coordinate<double>(previousSegmentCenterOfMass.i + segmentCenterX,
+                                                 (previousSegmentCenterOfMass.j + segmentCenterY)
+            ));
+
+            mQuadrilateralSegments[i]->set_orientation(segment_deflection+previousSegmentOrientation);
+
+        }
+
+        update_shape();
+
+    }
 
 private:
     double mWidth = 0;

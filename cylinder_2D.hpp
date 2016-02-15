@@ -168,6 +168,9 @@ public:
         return mLinearVelocity;
     }
 
+    void create_sinusoidal_motion(double segment_deflection)
+    {}
+
 
 private:
     double mRadius = 0;

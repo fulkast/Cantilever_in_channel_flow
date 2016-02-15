@@ -170,6 +170,9 @@ public:
         return mPoints[3];
     }
 
+    void create_sinusoidal_motion(double segment_deflection)
+    {}
+
 
 private:
     double mWidth = 0;

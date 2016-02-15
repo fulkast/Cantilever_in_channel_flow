@@ -92,6 +92,8 @@ public:
 
     void step_forward_one_step();
 
+    virtual void create_sinusoidal_motion(double segment_deflection) = 0;
+
 
 protected:
     lb::coordinate<double> mCenterOfMass;                           // current object's center of mass
