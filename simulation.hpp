@@ -13,6 +13,7 @@
 #include "lattice.hpp"
 #include <sstream>
 #include "quadrilateral_2D.hpp"
+#include "quadrilateral_cantilever_2D.h"
 
 
 namespace lb {
@@ -103,9 +104,10 @@ public: // ctor
 		/* *************
 		* Add shapes 
 		******************* */
-		  l.add_to_shapes(new cylinder_2D(lb::coordinate<double>(10*D,10*D),0,D/2));
-//		l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(10*D,10*D), 0, D, D));
-		
+//		  l.add_to_shapes(new cylinder_2D(lb::coordinate<double>(10*D,10*D),0,D/2));
+//		l.add_to_shapes(new quadrilateral_2D(lb::coordinate<double>(10*D-10,10*D-10), 0, D, D));
+		l.add_to_shapes(new quadrilateral_cantilever_2D(lb::coordinate<double>(10*D,10*D), 5*D, D, 5, D/10));
+
 
 		fix_missing_populations();
 
@@ -255,44 +257,31 @@ public: // ctor
 
 
 
-//				for(auto j = currentSolidNodes.begin(); j != currentSolidNodes.end(); j++)
-//				{
-//					//Delete shapes in visualization (to refresh)
-//					lb::coordinate<int> a_coordinate(j->i,j->j);
-//					l.unset_is_wall_node(a_coordinate);
-//
-//				}
+				for(auto j = currentSolidNodes.begin(); j != currentSolidNodes.end(); j++)
+				{
+					//Delete shapes in visualization (to refresh)
+					lb::coordinate<int> a_coordinate(j->i,j->j);
+					l.unset_is_wall_node(a_coordinate);
+
+				}
 				for(auto j = currentBoundaryNodes.begin(); j != currentBoundaryNodes.end(); j++)
 				{
 					lb::coordinate<int> a_coordinate(j->i,j->j);
 					l.unset_is_boundary_node(a_coordinate);
-					// l.get_node(j->i,j->j).rho() = 1; //test visualization
+					 l.get_node(j->i,j->j).rho() = 1; //test visualization
 				}
 
-				// for(auto j = l.refill_nodes.begin(); j!=l.refill_nodes.end(); j++)
-				// {
+				 for(auto j = l.refill_nodes.begin(); j!=l.refill_nodes.end(); j++)
+				 {
 
-				// 	l.get_node(j->first.first,j->first.second).rho() = 1; 	
-				// }
+				 	l.get_node(j->first.first,j->first.second).rho() = 1;
+				 }
 
 				l.refill_nodes.clear();
 				//check_node_status();
 				// UPDATE -Find the new wall & boundary nodes
 				(*i)->update_shape(); 
 				currentBoundaryNodes = (*i)->get_boundary_nodes();
-//<<<<<<< HEAD
-//				currentSolidNodes = (*i)->get_internal_nodes();
-//
-//				for (auto it = l.wall_nodes.begin(); it != l.wall_nodes.end(); it++ )
-//				{
-//					mSingleImmersedBody->
-//					cout << it->first.first << " " <<
-//
-//
-//				}
-//
-//				for(auto j = currentSolidNodes.begin(); j != currentSolidNodes.end(); j++)
-//=======
 				std::vector<lb::coordinate<int>> newSolidNodes = (*i)->get_internal_nodes();
 						
 				for(auto j = newSolidNodes.begin(); j != newSolidNodes.end(); j++)
@@ -307,7 +296,7 @@ public: // ctor
 				{
 					lb::coordinate<int> a_coordinate(j->i,j->j);
 					l.set_is_boundary_node(a_coordinate);
-					// l.get_node(j->i,j->j).rho() = 100; //test visualization 
+					 l.get_node(j->i,j->j).rho() = 100; //test visualization
 				}
 				
 				std::vector<bool> test_refill_nodes = l.find_refill_nodes(currentSolidNodes,newSolidNodes);
@@ -326,6 +315,9 @@ public: // ctor
 				}
 	
 			}
+
+//			quadrilateral_cantilever_2D mCantilever(lb::coordinate<double>(10*D,10*D), 5*D, D, 5, D/10);
+
 		}
 
 			

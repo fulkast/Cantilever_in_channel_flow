@@ -74,3 +74,43 @@ void geometry_2D::update_shape()
 {
 
 }
+
+double geometry_2D::get_angular_velocity()
+{
+    return mAngularVelocity;
+}
+
+void geometry_2D::set_omega(double a_value)
+{
+    mAngularVelocity = a_value;
+}
+
+lb::coordinate<double> geometry_2D::get_linear_velocity()
+{
+    return mLinearVelocity;
+}
+
+void geometry_2D::set_linear_velocity(lb::coordinate<double> a_tuple)
+{
+    mLinearVelocity = a_tuple;
+}
+
+double geometry_2D::get_angular_acceleration()
+{
+    return mAngularAcceleration;
+}
+
+void geometry_2D::set_angular_acceleration(double a_value)
+{
+    mAngularAcceleration = a_value;
+}
+
+lb::coordinate<double> geometry_2D::get_linear_acceleration()
+{
+    return mLinearAcceleration;
+}
+
+void geometry_2D::set_linear_acceleration(lb::coordinate<double> a_tuple)
+{
+    mLinearAcceleration = a_tuple;
+}

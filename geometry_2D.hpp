@@ -74,6 +74,24 @@ public:
 
     bool isCurrentlyAnInternalNode(lb::coordinate<int>& tuple);
 
+    double get_angular_velocity();
+
+    void set_omega(double a_value);
+
+    lb::coordinate<double> get_linear_velocity();
+
+    void set_linear_velocity(lb::coordinate<double> a_tuple);
+
+    double get_angular_acceleration();
+
+    void set_angular_acceleration(double a_value);
+
+    lb::coordinate<double> get_linear_acceleration();
+
+    void set_linear_acceleration(lb::coordinate<double> a_tuple);
+
+
+
 
 protected:
     lb::coordinate<double> mCenterOfMass;                           // current object's center of mass
@@ -84,5 +102,10 @@ protected:
             mMissingPopulationIndexMap;                             // current boundary's out going velocity
     std::vector<std::pair<int,int>> mIsCurrentlyAnInternalNode;     //
     // indices
+
+    lb::coordinate<double> mLinearVelocity;
+    lb::coordinate<double> mLinearAcceleration;
+    double mAngularVelocity;
+    double mAngularAcceleration;
 
 };

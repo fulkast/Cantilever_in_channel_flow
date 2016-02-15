@@ -1,57 +1,88 @@
+//
+// Created by frank on 15.02.16.
+//
+
+#ifndef LB2D_FRAMEWORK_QUADRILATERAL_CANTILEVER_2D_H
+#define LB2D_FRAMEWORK_QUADRILATERAL_CANTILEVER_2D_H
+
 #include "geometry_2D.hpp"
+#include <map>
 
-using namespace std;
 
-class quadrilateral_2D : public geometry_2D {
-    // Define a 2D cylinder derived from the base geometry_2D
+class quadrilateral_cantilever_2D : public geometry_2D {
 
 public:
 
-    quadrilateral_2D(lb::coordinate<double> centerOfMass, double orientation, double width, double height) :
-            geometry_2D(centerOfMass,orientation), mWidth(width), mHeight(height)
+//    quadrilateral_cantilever_2D(lb::coordinate<double> centerOfMass, double orientation, double width, double height) :
+    quadrilateral_cantilever_2D(lb::coordinate<double> leftMostSegmentCenterOfMass, double width, double height, int nSegments, double springWidth) :
+     mWidth(width), mHeight(height), mNSegments(nSegments), mSegmentWidth(width/nSegments), mSpringWidth(springWidth)
     {
-        mPolygon =  new Polygon_2(mPoints, mPoints+4);
+        mLeftMostSegment = new quadrilateral_2D(leftMostSegmentCenterOfMass,0.0,width/nSegments,height);
+        mQuadrilateralSegments.push_back(mLeftMostSegment);
+
+        mUnionPolygon = new Polygon_2(mPoints,mPoints+4);
+
+        for (int i = 1; i < mNSegments;i++)
+        {
+            lb::coordinate<double> segmentCenter(leftMostSegmentCenterOfMass.i+mSpringWidth+i*mSegmentWidth,leftMostSegmentCenterOfMass.j);
+            mQuadrilateralSegments.push_back(new quadrilateral_2D(segmentCenter,0.0,mSegmentWidth,mHeight));
+        }
 
         update_shape();
     }
 
-    void update_shape()
-    {
-        mPoints[0] = Point(-mWidth/2,+mHeight/2);
-        mPoints[1] = Point(+mWidth/2,+mHeight/2);
-        mPoints[2] = Point(+mWidth/2,-mHeight/2);
-        mPoints[3] = Point(-mWidth/2,-mHeight/2);
+    void update_shape() {
 
-        mRotate = Transformation(CGAL::ROTATION, sin(mOrientation), cos(mOrientation));
-        Transformation translate(CGAL::TRANSLATION, Vector(mCenterOfMass.i, mCenterOfMass.j));
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < mNSegments; i++)
         {
-            mPoints[i] = mRotate(mPoints[i]);
-            mPoints[i] = translate(mPoints[i]);
-        }
+            mQuadrilateralSegments[i]->update_shape();
 
-        *mPolygon = Polygon_2(mPoints, mPoints+4);
+        }
         update_boundary_and_internal_nodes();
 
     }
 
     void print()
     {
-        std::cout << "A quadrilateral ";
+        std::cout << "A cantilever ";
         geometry_2D::print();
-        std::cout << " and width: " << mWidth << " and height: " << mHeight << std::endl;
+        std::cout << " and segment width: " << mSegmentWidth << " and height: " << mHeight << std::endl;
     }
 
     // clears current internal nodes and generates new ones from the current state of the object
     void update_boundary_and_internal_nodes()
     {
+        mUnionPoints.clear();
+
+        for (int i = 0; i < mNSegments; i++)
+        {
+            mUnionPoints.push_back(mQuadrilateralSegments[i]->get_top_left_point());
+            mUnionPoints.push_back(mQuadrilateralSegments[i]->get_top_right_point());
+        }
+
+        for (int i = mNSegments-1; i >= 0 ; i--)
+        {
+            mUnionPoints.push_back(mQuadrilateralSegments[i]->get_bottom_right_point());
+            mUnionPoints.push_back(mQuadrilateralSegments[i]->get_bottom_left_point());
+        }
+
+
+
+        *mUnionPolygon = Polygon_2(mUnionPoints.begin(),mUnionPoints.end());
+
+        for (int i = 0; i < mNSegments; i++)
+        {
+            mQuadrilateralSegments[i]->update_boundary_and_internal_nodes();
+        }
+
         mBoundaryNodes.clear();
         mInternalNodes.clear();
         mMissingPopulationIndexMap.clear();
-        mIsCurrentlyAnInternalNode.clear();
 
         // get bounding box of current shape
-        CGAL::Bbox_2 boundingBox = mPolygon->bbox();
+        CGAL::Bbox_2 boundingBox = mUnionPolygon->bbox();
+
+//        std::cout << boundingBox.xmin() << " " << boundingBox.xmax() << std::endl;
 
         // iterate through bounding box nodes with 1 node lee way on all 4 sides
         for (int i = std::floor(CGAL::to_double(boundingBox.xmin())) - 2; i <= std::ceil(CGAL::to_double(boundingBox.xmax())) + 2; i++) {
@@ -61,11 +92,10 @@ public:
                 Point query_point(i,j);
 
                 // check if point is within the shape or right on the boundary
-                if(CGAL::bounded_side_2(mPoints,mPoints+4,query_point, K()) == CGAL::ON_BOUNDED_SIDE ||
-                   CGAL::bounded_side_2(mPoints,mPoints+4,query_point, K()) == CGAL::ON_BOUNDARY)
+                if(CGAL::bounded_side_2(mUnionPoints.begin(),mUnionPoints.end(),query_point, K()) == CGAL::ON_BOUNDED_SIDE ||
+                   CGAL::bounded_side_2(mUnionPoints.begin(),mUnionPoints.end(),query_point, K()) == CGAL::ON_BOUNDARY)
                 {
                     mInternalNodes.push_back(lb::coordinate<int>(i,j));
-                    mIsCurrentlyAnInternalNode.push_back(make_pair(i,j));
                     continue;
                 }
 
@@ -77,8 +107,8 @@ public:
                 {
                     query_point = Point(i+lb::velocity_set().c[0][velocity_index],j+lb::velocity_set().c[1][velocity_index]);
 
-                    if (CGAL::bounded_side_2(mPoints,mPoints+4,query_point, K()) == CGAL::ON_BOUNDED_SIDE ||
-                        CGAL::bounded_side_2(mPoints,mPoints+4,query_point, K()) == CGAL::ON_BOUNDARY)
+                    if (CGAL::bounded_side_2(mUnionPoints.begin(),mUnionPoints.end(),query_point, K()) == CGAL::ON_BOUNDED_SIDE ||
+                        CGAL::bounded_side_2(mUnionPoints.begin(),mUnionPoints.end(),query_point, K()) == CGAL::ON_BOUNDARY)
                     {
                         // reflect the velocity index to get the corresponding outgoing velocity at the node
                         // and add it to the outgoing velocity indices of the current (boundary) node
@@ -98,6 +128,7 @@ public:
             }
         }
 
+
     }
 
     double get_ray_length_at_intersection(lb::coordinate<int> boundary_node, int lb_velocity_index)
@@ -112,7 +143,7 @@ public:
                               Point(boundary_node.i+lb::velocity_set().c[0][lb_velocity_index],
                                     boundary_node.j+lb::velocity_set().c[1][lb_velocity_index]));
 
-        for (auto edge = mPolygon->edges_begin(); edge != mPolygon->edges_end(); edge++)
+        for (auto edge = mUnionPolygon->edges_begin(); edge != mUnionPolygon->edges_end(); edge++)
         {
 
             if (CGAL::do_intersect(projectingRay,*edge))
@@ -153,28 +184,23 @@ public:
 
     }
 
-    Point get_top_left_point()
-    {
-        return mPoints[0];
-    }
-    Point get_top_right_point()
-    {
-        return mPoints[1];
-    }
-    Point get_bottom_right_point()
-    {
-        return mPoints[2];
-    }
-    Point get_bottom_left_point()
-    {
-        return mPoints[3];
-    }
-
 
 private:
     double mWidth = 0;
     double mHeight = 0;
-    Polygon_2* mPolygon;
+    int mNSegments = 0;
+    double mSegmentWidth = 0;
+    double mSpringWidth;
+
+    Polygon_2* mUnionPolygon;
+    std::vector<Point> mUnionPoints;
+    quadrilateral_2D* mLeftMostSegment;
+    std::vector<quadrilateral_2D*> mQuadrilateralSegments;
     Point mPoints[4];
     Transformation mRotate;
+
+
 };
+
+
+#endif //LB2D_FRAMEWORK_CANTILEVER_2D_H
