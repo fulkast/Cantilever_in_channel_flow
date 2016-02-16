@@ -18,6 +18,11 @@ public:
      mWidth(width), mHeight(height), mNSegments(nSegments), mSegmentWidth(width/nSegments), mSpringWidth(springWidth), mLeftMostSegmentOrientation(orientation)
     {
         mLeftMostSegment = new quadrilateral_2D(leftMostSegmentCenterOfMass,mLeftMostSegmentOrientation,width/nSegments,height);
+        mLeftMostSegment->set_linear_acceleration(lb::coordinate<double>(0.0,0.0));
+        mLeftMostSegment->set_angular_acceleration(0.0);
+        mLeftMostSegment->set_linear_velocity(lb::coordinate<double>(0.0,0.0));
+        mLeftMostSegment->set_angular_velocity(0.0);
+
         mQuadrilateralSegments.push_back(mLeftMostSegment);
 
         mUnionPolygon = new Polygon_2(mPoints,mPoints+4);
@@ -230,14 +235,23 @@ public:
     void create_sinusoidal_motion(double segment_deflection)
     {
 
-        for (auto i = 1; i < mQuadrilateralSegments.size();i ++)
+        for (auto i = 1; i < mQuadrilateralSegments.size();i++)
         {
-            mQuadrilateralSegments[i]->set_orientation(segment_deflection);
+            mQuadrilateralSegments[i]->set_angular_velocity(segment_deflection);
+            mQuadrilateralSegments[i]->set_angular_acceleration(0.0);
+            mQuadrilateralSegments[i]->set_linear_velocity(lb::coordinate<double>(0.0,0.0));
+            mQuadrilateralSegments[i]->set_linear_acceleration(lb::coordinate<double>(0.0,0.0));
+            mQuadrilateralSegments[i]->step_forward_one_step();
+
             lb::coordinate<double> previousSegmentCenterOfMass = mQuadrilateralSegments[i-1]->get_center_of_mass();
             double previousSegmentOrientation = mQuadrilateralSegments[i-1]->get_orientation();
             double segmentCenterX = cos(previousSegmentOrientation)*(mSpringWidth+mSegmentWidth);
             double segmentCenterY = sin(previousSegmentOrientation)*(mSpringWidth+mSegmentWidth);
-            double currentSegmentOrientation = segment_deflection;
+            double currentSegmentOrientation = mQuadrilateralSegments[i]->get_orientation();
+            if (i == 1) currentSegmentOrientation = segment_deflection;
+//            double currentSegmentOrientation = segment_deflection;
+            std::cout << currentSegmentOrientation << " " << std::endl;
+
 
             segmentCenterX = cos(currentSegmentOrientation)*segmentCenterX + -sin(currentSegmentOrientation)*segmentCenterY;
             segmentCenterY = sin(currentSegmentOrientation)*segmentCenterX + cos(currentSegmentOrientation)*segmentCenterY;
@@ -246,7 +260,11 @@ public:
                                                  (previousSegmentCenterOfMass.j + segmentCenterY)
             ));
 
-            mQuadrilateralSegments[i]->set_orientation(segment_deflection+previousSegmentOrientation);
+            mQuadrilateralSegments[i]->set_orientation(currentSegmentOrientation+previousSegmentOrientation);
+            mQuadrilateralSegments[i]->set_linear_velocity(lb::coordinate<double> (mQuadrilateralSegments[i]->get_angular_velocity()
+            *(mSpringWidth+mSegmentWidth)*-sin(currentSegmentOrientation+previousSegmentOrientation),
+                                                                                   (mQuadrilateralSegments[i]->get_angular_velocity()*(mSpringWidth+mSegmentWidth)
+                                                                                   * cos(currentSegmentOrientation+previousSegmentOrientation))));
 
         }
 

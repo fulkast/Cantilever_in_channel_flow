@@ -80,7 +80,7 @@ double geometry_2D::get_angular_velocity()
     return mAngularVelocity;
 }
 
-void geometry_2D::set_omega(double a_value)
+void geometry_2D::set_angular_velocity(double a_value)
 {
     mAngularVelocity = a_value;
 }

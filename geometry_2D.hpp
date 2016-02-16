@@ -76,7 +76,7 @@ public:
 
     double get_angular_velocity();
 
-    void set_omega(double a_value);
+    void set_angular_velocity(double a_value);
 
     lb::coordinate<double> get_linear_velocity();
 
@@ -97,7 +97,7 @@ public:
 
 protected:
     lb::coordinate<double> mCenterOfMass;                           // current object's center of mass
-    double mOrientation;                                            // current object's orientation
+    double mOrientation = 0;                                            // current object's orientation
     std::vector<lb::coordinate<int>> mBoundaryNodes;                // current object's boundaries
     std::vector<lb::coordinate<int>> mInternalNodes;                // current object's wall internal nodes
     std::map<std::pair<int,int>,std::vector<int>>
