@@ -283,8 +283,8 @@ public: // ctor
 					if (!test_refill_nodes[j]) {
 						std::cout << "Has " << test_refill_nodes.size() << " refill nodes" << std::endl;
 						l.get_node(currentSolidNodes[j].i, currentSolidNodes[j].j).rho() = 1;
-						l.get_node(currentSolidNodes[j].i, currentSolidNodes[j].j).u() = Vmax;
-						l.get_node(currentSolidNodes[j].i, currentSolidNodes[j].j).v() = 0;
+						l.get_node(currentSolidNodes[j].i, currentSolidNodes[j].j).u() = (*i)->get_linear_acceleration().i;
+						l.get_node(currentSolidNodes[j].i, currentSolidNodes[j].j).v() = (*i)->get_linear_acceleration().j;
 						lb::velocity_set().equilibrate(l.get_node(currentSolidNodes[j].i, currentSolidNodes[j].j));
 						auto a_refill_node = lb::coordinate<int>(currentSolidNodes[j].i, currentSolidNodes[j].j);
 						l.set_is_refill_node(a_refill_node);
@@ -480,7 +480,7 @@ public:    // for interaction with immersed shape
 
 
 		void fix_missing_populations() {
-			string approx = "grads";
+			string approx = "bb";
 
 			// boundary nodes iterator
 			auto mSingleImmersedBody = *l.shapes.begin(); // More general
@@ -519,6 +519,8 @@ public:    // for interaction with immersed shape
 					double rho_bb = 0;
 
 					lb::node current_node = l.get_node(iIndex, jIndex);
+
+
 					double dvdy = 0;
 					double dvdx = 0;
 					double dudx = 0;
@@ -556,22 +558,26 @@ public:    // for interaction with immersed shape
 						rho_s += lb::velocity_set().W[*mIt] * ci_dot_u_wi;
 
 						//velocity gradient
-						if (currentVelocity.i == 0) {
+						if (currentVelocity.i == 0)
+						{
 							dvdy = currentVelocity.j * (adjacentFluidVelocity.j - current_node.v());
 							dudy = currentVelocity.j * (adjacentFluidVelocity.i - current_node.u());
 						}
-						else if (currentVelocity.j == 0) {
+						else if (currentVelocity.j == 0)
+						{
 							dudx = currentVelocity.i * (adjacentFluidVelocity.i -
 														current_node.u());// velocity comp. 'i', derived in 'i' direction
 							dvdx = currentVelocity.i * (adjacentFluidVelocity.j - current_node.v());
 						}
 					}
+
 					double rho_0 = 0;
 
 					for (int rho_0_index = 0; rho_0_index < 9; rho_0_index++)
 					{
 						rho_0 += l.get_node(iIndex, jIndex).f(rho_0_index);
 					}
+
 
 					rho_s *= 6 * rho_0;
 
@@ -592,6 +598,10 @@ public:    // for interaction with immersed shape
 					u_tgt.j /= currentMissingPopulations.size();
 					l.set_u_target_at_node(currentCoordinate, u_tgt);
 
+
+
+
+
 					// Pressure tensor
 					double Pxxeq =
 							rho_tgt * lb::velocity_set().cs * lb::velocity_set().cs + rho_tgt * u_tgt.i * u_tgt.i;
@@ -611,48 +621,41 @@ public:    // for interaction with immersed shape
 					double Pxy = Pxyeq + Pxyneq;
 
 					// Grad's Approximation
-					for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++) {
+					for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++)
+					{
 						lb::coordinate<int> currentVelocity(lb::velocity_set().c[0][*mIt],
 															lb::velocity_set().c[1][*mIt]);
 
-						l.f[*mIt][l.index(iIndex, jIndex)] = lb::velocity_set().W[*mIt] * (rho_tgt +
-																						   rho_tgt * u_tgt.i *
-																						   currentVelocity.i /
-																						   (lb::velocity_set().cs *
-																							lb::velocity_set().cs) +
-																						   rho_tgt * u_tgt.j *
-																						   currentVelocity.j /
-																						   (lb::velocity_set().cs *
-																							lb::velocity_set().cs) +
-																						   (1 /
-																							(2 * lb::velocity_set().cs *
-																							 lb::velocity_set().cs *
-																							 lb::velocity_set().cs *
-																							 lb::velocity_set().cs)) *
-																						   ((Pxx - rho_tgt *
-																								   lb::velocity_set().cs *
-																								   lb::velocity_set().cs) *
-																							(currentVelocity.i *
-																							 currentVelocity.i -
-																							 lb::velocity_set().cs *
-																							 lb::velocity_set().cs) +
-																							(Pyy - rho_tgt *
-																								   lb::velocity_set().cs *
-																								   lb::velocity_set().cs) *
-																							(currentVelocity.j *
-																							 currentVelocity.j -
-																							 lb::velocity_set().cs *
-																							 lb::velocity_set().cs) +
-																							2 * (Pxy) *
-																							(currentVelocity.i *
-																							 currentVelocity.j)));
+						l.f[*mIt][l.index(iIndex, jIndex)] = lb::velocity_set().W[*mIt] *
+								(rho_tgt +
+								rho_tgt * u_tgt.i * currentVelocity.i / (lb::velocity_set().cs * lb::velocity_set().cs) +
+								rho_tgt * u_tgt.j *	currentVelocity.j /	(lb::velocity_set().cs * lb::velocity_set().cs) +
+								(1 /(2 * lb::velocity_set().cs * lb::velocity_set().cs * lb::velocity_set().cs * lb::velocity_set().cs)) *
+								((Pxx - rho_tgt * lb::velocity_set().cs * lb::velocity_set().cs) *
+								(currentVelocity.i * currentVelocity.i - lb::velocity_set().cs * lb::velocity_set().cs) +
+								(Pyy - rho_tgt * lb::velocity_set().cs * lb::velocity_set().cs) *
+								(currentVelocity.j * currentVelocity.j - lb::velocity_set().cs * lb::velocity_set().cs) +
+								2 * (Pxy) * (currentVelocity.i * currentVelocity.j)));
+					}
+
+					if(iIndex == 101)
+					{
+						std::cout << "Current node " << iIndex << " " << jIndex << std::endl;
+						std::cout << "Utgt: " << u_tgt.i << " " << u_tgt.j << std::endl;
+						std::cout << "rho_tgt " << rho_tgt << std::endl;
+						double uI = 0; double uJ = 0;
+						for (int popIndex = 0; popIndex < 9; popIndex++)
+						{
+							uI += l.get_node(iIndex,jIndex).f(popIndex) * lb::velocity_set().c[0][popIndex];
+							uJ += l.get_node(iIndex,jIndex).f(popIndex) * lb::velocity_set().c[1][popIndex];
+						}
+						std::cout << "actual summed up velocity " << uI << " " << uJ << std::endl;
+
 					}
 
 
 				}
 			}
-
-
 		}
 
 
