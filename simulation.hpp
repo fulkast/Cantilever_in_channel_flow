@@ -235,8 +235,11 @@ public: // ctor
 //				(*i)->create_sinusoidal_motion( sin(time * 2 * 3.141596265 / 10) * 0.005);
 //				(*i)->set_center_of_mass(lb::coordinate<double>(COM.i+0.1,COM.j));
 
-//				(*i)->set_linear_velocity(lb::coordinate<double>(0.0,0.05*sin(time*2*3.141592/100)));
-//				(*i)->step_forward_one_step();
+				double F = 0.6;
+				double f_s = 0.165*Vmax/D;
+				double y_max = 0.25*D;
+				(*i)->set_linear_velocity(lb::coordinate<double>(0.0,y_max*2*3.141592*f_s*F*sin(time*2*3.141592*f_s*F)));
+				(*i)->step_forward_one_step();
 
 
 
@@ -282,9 +285,11 @@ public: // ctor
 				for (auto j = 0; j < test_refill_nodes.size(); j++) {
 					if (!test_refill_nodes[j]) {
 						std::cout << "Has " << test_refill_nodes.size() << " refill nodes" << std::endl;
+						int fluid_direction_index = ((*i)->find_missing_populations(currentSolidNodes[j])[0]);
+						lb::coordinate<int> fluid_direction(lb::velocity_set().c[0][fluid_direction_index],lb::velocity_set().c[1][fluid_direction_index]);
 						l.get_node(currentSolidNodes[j].i, currentSolidNodes[j].j).rho() = 1;
-						l.get_node(currentSolidNodes[j].i, currentSolidNodes[j].j).u() = (*i)->get_linear_acceleration().i;
-						l.get_node(currentSolidNodes[j].i, currentSolidNodes[j].j).v() = (*i)->get_linear_acceleration().j;
+						l.get_node(currentSolidNodes[j].i, currentSolidNodes[j].j).u() = l.get_node(currentSolidNodes[j].i+fluid_direction.i,currentSolidNodes[j].j+fluid_direction.j).u();
+						l.get_node(currentSolidNodes[j].i, currentSolidNodes[j].j).v() = l.get_node(currentSolidNodes[j].i+fluid_direction.i,currentSolidNodes[j].j+fluid_direction.j).v();
 						lb::velocity_set().equilibrate(l.get_node(currentSolidNodes[j].i, currentSolidNodes[j].j));
 						auto a_refill_node = lb::coordinate<int>(currentSolidNodes[j].i, currentSolidNodes[j].j);
 						l.set_is_refill_node(a_refill_node);
@@ -351,15 +356,12 @@ public: // ctor
 
 		advect();
 		wall_bc();
+		force_evaluation(FxSingleBody,FySingleBody);
+		CdSingleBody = get_aerodynamic_coeffcient_from_force(FxSingleBody);
+		ClSingleBody = get_aerodynamic_coeffcient_from_force(FySingleBody);
+		print_aerodynamic_info();
+
 		collide();
-		 force_evaluation(FxSingleBody,FySingleBody);
-		 CdSingleBody = get_aerodynamic_coeffcient_from_force(FxSingleBody);
-		 ClSingleBody = get_aerodynamic_coeffcient_from_force(FySingleBody);
-		 print_aerodynamic_info();
-
-		// move_shape();
-		// find_and_fix_refill_nodes();
-
 
 
 		// file io
@@ -413,7 +415,7 @@ public:    // for interaction with immersed shape
 			if (l.get_node(iIndex, jIndex).has_flag_property("fluid") ||
 				l.get_node(iIndex, jIndex).has_flag_property("boundary")) {
 				// l.set_is_refill_node(currentCoordinate);
-				l.get_node(wall_iter->i, wall_iter->j).rho() = 100;
+				//l.get_node(wall_iter->i, wall_iter->j).rho() = 100;
 			}
 
 		}
@@ -429,8 +431,7 @@ public:    // for interaction with immersed shape
 				int iIndex = it->i;
 				int jIndex = it->j;
 				lb::coordinate<int> currentCoordinate(iIndex, jIndex);
-				std::vector<int> currentMissingPopulations = mSingleImmersedBody->find_missing_populations(
-						currentCoordinate);
+				std::vector<int> currentMissingPopulations = mSingleImmersedBody->find_missing_populations(currentCoordinate);
 
 				for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++) {
 					lb::coordinate<int> currentVelocity(lb::velocity_set().c[0][*mIt], lb::velocity_set().c[1][*mIt]);
@@ -480,7 +481,7 @@ public:    // for interaction with immersed shape
 
 
 		void fix_missing_populations() {
-			string approx = "bb";
+			string approx = "grads";
 
 			// boundary nodes iterator
 			auto mSingleImmersedBody = *l.shapes.begin(); // More general
@@ -493,6 +494,10 @@ public:    // for interaction with immersed shape
 			l.clear_rho_target_for_all_boundary_nodes();
 			l.clear_u_target_for_all_boundary_nodes();
 
+			newRhoMap.clear();
+			newUMap.clear();
+			newVMap.clear();
+			// set new densities and velocities for boundary nodes and their fluid neighbours
 			for (auto it = currentBoundary.begin(); it != currentBoundary.end(); it++) {
 				//lattice representation indices for current node
 				int iIndex = it->i;
@@ -503,13 +508,46 @@ public:    // for interaction with immersed shape
 				std::vector<int> currentMissingPopulations = mSingleImmersedBody->find_missing_populations(
 						currentCoordinate);
 
-				if (approx == "bb") {
-					// Bounce-back test (simple implementation)
-					for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++) {
-						l.get_node(iIndex, jIndex).f(*mIt) = l.get_node(iIndex, jIndex).f(
-								lb::velocity_set().incoming_velocity_to_outgoing_velocity(*mIt));
+				for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++)
+				{
+
+					lb::coordinate<int> currentVelocity(lb::velocity_set().c[0][*mIt], lb::velocity_set().c[1][*mIt]);        // get the velocity represented by the current missing population index
+
+					// Bounce-back (simple implementation)
+					l.get_node(iIndex, jIndex).f(*mIt) = l.get_node(iIndex, jIndex).f(lb::velocity_set().incoming_velocity_to_outgoing_velocity(*mIt));
+
+					if (newRhoMap.count(std::make_pair(iIndex + currentVelocity.i, jIndex + currentVelocity.j))) continue;
+
+					double newRho = 0; double newU = 0; double newV = 0;
+
+					for (int veloUpdateIndex = 0; veloUpdateIndex < 9; veloUpdateIndex++)
+					{
+						newRho += l.get_node(iIndex + currentVelocity.i, jIndex + currentVelocity.j).f(veloUpdateIndex);
+						newU += l.get_node(iIndex + currentVelocity.i, jIndex + currentVelocity.j).f(veloUpdateIndex)*lb::velocity_set().c[0][veloUpdateIndex];
+						newV += l.get_node(iIndex + currentVelocity.i, jIndex + currentVelocity.j).f(veloUpdateIndex)*lb::velocity_set().c[1][veloUpdateIndex];
 					}
+
+					newU /= newRho;
+					newV /= newRho;
+
+					newRhoMap[std::make_pair(iIndex + currentVelocity.i, jIndex + currentVelocity.j)] = newRho;
+					newUMap[std::make_pair(iIndex + currentVelocity.i, jIndex + currentVelocity.j)] = newU;
+					newVMap[std::make_pair(iIndex + currentVelocity.i, jIndex + currentVelocity.j)] = newV;
 				}
+
+			}
+
+
+			for (auto it = currentBoundary.begin(); it != currentBoundary.end(); it++) {
+				//lattice representation indices for current node
+				int iIndex = it->i;
+				int jIndex = it->j;
+				lb::coordinate<int> currentCoordinate(iIndex, jIndex);
+
+				// find missing populations at current node
+				std::vector<int> currentMissingPopulations = mSingleImmersedBody->find_missing_populations(
+						currentCoordinate);
+
 
 				//-- The following naming is in accordance with equation 14 from reference paper of Dorschner et al. -------//
 				if (approx == "grads") {
@@ -519,54 +557,47 @@ public:    // for interaction with immersed shape
 					double rho_bb = 0;
 
 					lb::node current_node = l.get_node(iIndex, jIndex);
-
-
 					double dvdy = 0;
 					double dvdx = 0;
 					double dudx = 0;
 					double dudy = 0;
 
 					// iterate through all missing populations at current node
-					for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++) {
+					for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++) 
+					{
 
-						lb::coordinate<int> currentVelocity(lb::velocity_set().c[0][*mIt],
-															lb::velocity_set().c[1][*mIt]);        // get the velocity represented by the current missing population index
-						lb::node fluidNeighborNode = l.get_node(iIndex + currentVelocity.i, jIndex +
-																							currentVelocity.j);        // get the fluid node to interpolate velocity from
-						lb::coordinate<double> adjacentFluidVelocity(fluidNeighborNode.u(),
-																	 fluidNeighborNode.v());                // get its velocity
+						lb::coordinate<int> currentVelocity(lb::velocity_set().c[0][*mIt], lb::velocity_set().c[1][*mIt]);        // get the velocity represented by the current missing population index
+						lb::node fluidNeighborNode = l.get_node(iIndex + currentVelocity.i, jIndex + currentVelocity.j);        // get the fluid node to interpolate velocity from
+						lb::coordinate<double> adjacentFluidVelocity(fluidNeighborNode.u(), fluidNeighborNode.v());                // get its velocity
+						lb::coordinate<double> newAdjacentFluidVelocity(newUMap[make_pair(iIndex + currentVelocity.i, jIndex + currentVelocity.j)],
+																		newVMap[make_pair(iIndex + currentVelocity.i, jIndex + currentVelocity.j)]);
 
-						double q_i = (mSingleImmersedBody->get_ray_length_at_intersection(currentCoordinate, *mIt)) /
-									 lb::velocity_set().magnitude_c[*mIt];
-						lb::coordinate<double> adjacentWallVelocity = mSingleImmersedBody->get_velocity_at_intersection(
-								currentCoordinate, *mIt);
+						double q_i = (mSingleImmersedBody->get_ray_length_at_intersection(currentCoordinate, *mIt)) / lb::velocity_set().magnitude_c[*mIt];
+						lb::coordinate<double> adjacentWallVelocity = mSingleImmersedBody->get_velocity_at_intersection(currentCoordinate, *mIt);
 
-						u_tgt.i += (q_i * adjacentFluidVelocity.i + adjacentWallVelocity.i) / (1 + q_i);
-						u_tgt.j += (q_i * adjacentFluidVelocity.j + adjacentWallVelocity.j) / (1 + q_i);
+						u_tgt.i += (q_i * newAdjacentFluidVelocity.i + adjacentWallVelocity.i) / (1 + q_i);
+						u_tgt.j += (q_i * newAdjacentFluidVelocity.j + adjacentWallVelocity.j) / (1 + q_i);
 
 						// work on rho bb
 
 						// add the bounce back using the incoming to outgoing velocity swapper
-						rho_bb += l.get_node(iIndex, jIndex).f(
-								lb::velocity_set().incoming_velocity_to_outgoing_velocity(*mIt));
+						rho_bb += l.get_node(iIndex, jIndex).f(lb::velocity_set().incoming_velocity_to_outgoing_velocity(*mIt));
 						rho_bb_has_added_index_i[*mIt] = true;            // set velocity has been added to rho_bb
 
 						// work on rho s
-						double ci_dot_u_wi =
-								currentVelocity.i * adjacentWallVelocity.i + currentVelocity.j * adjacentWallVelocity.j;
+						double ci_dot_u_wi = currentVelocity.i * adjacentWallVelocity.i + currentVelocity.j * adjacentWallVelocity.j;
 
 						rho_s += lb::velocity_set().W[*mIt] * ci_dot_u_wi;
 
 						//velocity gradient
-						if (currentVelocity.i == 0)
+						if (currentVelocity.i == 0) 
 						{
 							dvdy = currentVelocity.j * (adjacentFluidVelocity.j - current_node.v());
 							dudy = currentVelocity.j * (adjacentFluidVelocity.i - current_node.u());
 						}
-						else if (currentVelocity.j == 0)
+						else if (currentVelocity.j == 0) 
 						{
-							dudx = currentVelocity.i * (adjacentFluidVelocity.i -
-														current_node.u());// velocity comp. 'i', derived in 'i' direction
+							dudx = currentVelocity.i * (adjacentFluidVelocity.i - current_node.u());// velocity comp. 'i', derived in 'i' direction
 							dvdx = currentVelocity.i * (adjacentFluidVelocity.j - current_node.v());
 						}
 					}
@@ -577,7 +608,6 @@ public:    // for interaction with immersed shape
 					{
 						rho_0 += l.get_node(iIndex, jIndex).f(rho_0_index);
 					}
-
 
 					rho_s *= 6 * rho_0;
 
@@ -596,66 +626,41 @@ public:    // for interaction with immersed shape
 					//complete u_tgt update
 					u_tgt.i /= currentMissingPopulations.size();
 					u_tgt.j /= currentMissingPopulations.size();
-					l.set_u_target_at_node(currentCoordinate, u_tgt);
-
-
-
-
+					// l.set_u_target_at_node(currentCoordinate, u_tgt);
 
 					// Pressure tensor
-					double Pxxeq =
-							rho_tgt * lb::velocity_set().cs * lb::velocity_set().cs + rho_tgt * u_tgt.i * u_tgt.i;
-					double Pyyeq =
-							rho_tgt * lb::velocity_set().cs * lb::velocity_set().cs + rho_tgt * u_tgt.j * u_tgt.j;
+					double Pxxeq = rho_tgt * lb::velocity_set().cs * lb::velocity_set().cs + rho_tgt * u_tgt.i * u_tgt.i;
+					double Pyyeq = rho_tgt * lb::velocity_set().cs * lb::velocity_set().cs + rho_tgt * u_tgt.j * u_tgt.j;
 					double Pxyeq = rho_tgt * u_tgt.i * u_tgt.j; // also --> Pyxeq
 
-					double Pxxneq =
-							-rho_tgt * lb::velocity_set().cs * lb::velocity_set().cs / (2 * beta) * (dudx + dudx);
-					double Pyyneq =
-							-rho_tgt * lb::velocity_set().cs * lb::velocity_set().cs / (2 * beta) * (dvdy + dvdy);
-					double Pxyneq =
-							-rho_tgt * lb::velocity_set().cs * lb::velocity_set().cs / (2 * beta) * (dudy + dvdx);
+					double Pxxneq = -rho_tgt * lb::velocity_set().cs * lb::velocity_set().cs / (2 * beta) * (dudx + dudx);
+					double Pyyneq = -rho_tgt * lb::velocity_set().cs * lb::velocity_set().cs / (2 * beta) * (dvdy + dvdy);
+					double Pxyneq = -rho_tgt * lb::velocity_set().cs * lb::velocity_set().cs / (2 * beta) * (dudy + dvdx);
 
 					double Pxx = Pxxeq + Pxxneq;
 					double Pyy = Pyyeq + Pyyneq;
 					double Pxy = Pxyeq + Pxyneq;
 
 					// Grad's Approximation
-					for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++)
+					for (auto mIt = currentMissingPopulations.begin(); mIt != currentMissingPopulations.end(); mIt++) 
 					{
-						lb::coordinate<int> currentVelocity(lb::velocity_set().c[0][*mIt],
-															lb::velocity_set().c[1][*mIt]);
+						lb::coordinate<int> currentVelocity(lb::velocity_set().c[0][*mIt],lb::velocity_set().c[1][*mIt]);
 
 						l.f[*mIt][l.index(iIndex, jIndex)] = lb::velocity_set().W[*mIt] *
-								(rho_tgt +
-								rho_tgt * u_tgt.i * currentVelocity.i / (lb::velocity_set().cs * lb::velocity_set().cs) +
-								rho_tgt * u_tgt.j *	currentVelocity.j /	(lb::velocity_set().cs * lb::velocity_set().cs) +
-								(1 /(2 * lb::velocity_set().cs * lb::velocity_set().cs * lb::velocity_set().cs * lb::velocity_set().cs)) *
-								((Pxx - rho_tgt * lb::velocity_set().cs * lb::velocity_set().cs) *
-								(currentVelocity.i * currentVelocity.i - lb::velocity_set().cs * lb::velocity_set().cs) +
-								(Pyy - rho_tgt * lb::velocity_set().cs * lb::velocity_set().cs) *
-								(currentVelocity.j * currentVelocity.j - lb::velocity_set().cs * lb::velocity_set().cs) +
-								2 * (Pxy) * (currentVelocity.i * currentVelocity.j)));
-					}
-
-					if(iIndex == 101)
-					{
-						std::cout << "Current node " << iIndex << " " << jIndex << std::endl;
-						std::cout << "Utgt: " << u_tgt.i << " " << u_tgt.j << std::endl;
-						std::cout << "rho_tgt " << rho_tgt << std::endl;
-						double uI = 0; double uJ = 0;
-						for (int popIndex = 0; popIndex < 9; popIndex++)
-						{
-							uI += l.get_node(iIndex,jIndex).f(popIndex) * lb::velocity_set().c[0][popIndex];
-							uJ += l.get_node(iIndex,jIndex).f(popIndex) * lb::velocity_set().c[1][popIndex];
-						}
-						std::cout << "actual summed up velocity " << uI << " " << uJ << std::endl;
-
+						(rho_tgt + 
+						rho_tgt * u_tgt.i * currentVelocity.i / (lb::velocity_set().cs * lb::velocity_set().cs) + 
+						rho_tgt * u_tgt.j * currentVelocity.j /(lb::velocity_set().cs * lb::velocity_set().cs) +
+					   	(1 /(2 * lb::velocity_set().cs *lb::velocity_set().cs * lb::velocity_set().cs *lb::velocity_set().cs)) *
+					   	((Pxx - rho_tgt *lb::velocity_set().cs *lb::velocity_set().cs) *(currentVelocity.i *currentVelocity.i -lb::velocity_set().cs *lb::velocity_set().cs) +
+						(Pyy - rho_tgt *lb::velocity_set().cs * lb::velocity_set().cs) *(currentVelocity.j *currentVelocity.j -lb::velocity_set().cs *lb::velocity_set().cs) +
+						2 * (Pxy) *(currentVelocity.i *currentVelocity.j)));
 					}
 
 
 				}
 			}
+
+
 		}
 
 
@@ -679,6 +684,10 @@ public:    // for interaction with immersed shape
 		double ClSingleBody;
 		double CdSingleBodyPreviousTimeStep = 0;
 		double ClSingleBodyPreviousTimeStep = 0;
+		std::map<std::pair<int,int>,double> newRhoMap;
+		std::map<std::pair<int,int>,double> newUMap;
+		std::map<std::pair<int,int>,double> newVMap;
+
 
 
 		geometry_2D *mSingleImmersedBody = nullptr; //An immersed object interacting with the fluid

@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
 	omp_set_num_threads(std::max(omp_get_max_threads(),omp_get_num_procs()));
 	const double D = 10; //Diameter of cylinder in cross flow
 
-	lb::simulation* sim = new lb::simulation(40*D,20*D,20,0.05,D); // nx, ny, Re, v_max, D
+	lb::simulation* sim = new lb::simulation(40*D,20*D,200,0.05,D); // nx, ny, Re, v_max, D
 	sim->initialize();
 
 
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 //
 //		// how to access the lattice:
 //		// --------------------------
-//
+//m
 //		// 1) access via node proxy
 //		sim->l.get_node(1,0).f(0) = 2;
 //
